@@ -4,377 +4,94 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>中华白海豚数据库</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQfRZ9ccNTShUN1h2ATZK7+5q6E3oY=" crossorigin="" />
 <style>
 :root{
   --bg:#f4fbff; --card:#ffffff; --line:#d7e5ef; --muted:#5b7285; --text:#10212f;
-  --blue:#0ea5e9; --blue-2:#38bdf8; --blue-3:#7dd3fc; --blue-4:#dff4ff; --chip:#eef8ff;
-  --green:#10b981; --orange:#f59e0b; --red:#ef4444;
-  --shadow:0 10px 28px rgba(15,23,42,.05);
+  --blue:#0ea5e9; --blue2:#38bdf8; --blue3:#7dd3fc; --blue4:#dff4ff;
+  --water:#dff4ff; --hk:#0ea5e9; --zh:#f59e0b; --shadow:0 10px 28px rgba(15,23,42,.05);
 }
-*{box-sizing:border-box}
-body{
-  margin:0; color:var(--text);
-  font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-  background:
-    radial-gradient(900px 500px at 10% -10%, rgba(14,165,233,.18), transparent 55%),
-    radial-gradient(1000px 600px at 100% 0%, rgba(2,132,199,.10), transparent 50%),
-    var(--bg);
-  overflow-x:hidden;
-}
-.wrap{max-width:1500px; margin:0 auto; padding:20px 16px 28px; min-height:100vh;}
-.head,.sidebar,.main,.pageFooter{
-  background:rgba(255,255,255,.88); border:1px solid var(--line); border-radius:18px;
-  backdrop-filter:blur(8px); box-shadow:var(--shadow);
-}
-.head{padding:18px 18px 14px; margin-bottom:14px;}
-.headTop{display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
-h1{margin:0 0 6px; font-size:28px}
-.sub{margin:0; color:var(--muted)}
-.note{margin:8px 0 0; color:var(--muted); font-size:12px}
-.layout{display:grid; grid-template-columns:320px 1fr; gap:14px; align-items:start; min-height:calc(100vh - 160px);}
-@media (max-width:980px){.layout{grid-template-columns:1fr; min-height:auto}.headTop{flex-direction:column}.sidebar,.main{max-height:none; overflow:visible}.pageFooter{margin-top:14px}}
-.sidebar,.main{min-height:0;}
-.sidebar{padding:14px; position:sticky; top:12px; max-height:calc(100vh - 24px); overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable;}
-.main{padding:14px; max-height:calc(100vh - 24px); overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable;}
-.pageFooter{padding:12px 14px; margin-top:14px; color:var(--muted); font-size:12px; text-align:center; display:flex; align-items:center; justify-content:center;}
-button,select,input[type=range]{font:inherit}
-button,select{border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--text); padding:10px 12px; cursor:pointer;}
-button:hover,select:hover{border-color:#b9d6e6; background:#fcfeff}.langBtn{white-space:nowrap; font-weight:700;}
-.controls{display:grid; gap:12px}.controlCard{border:1px solid var(--line); border-radius:14px; padding:12px; background:#fbfeff;}
-.controlTitle{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; color:var(--muted); font-size:12px;}
-.controlTitle strong{color:var(--text); font-size:14px}.pill{display:inline-block; padding:4px 8px; border-radius:999px; background:var(--chip); border:1px solid #d6efff; color:#065f8f; font-size:12px;}
-.yearValue{font-size:32px; line-height:1; font-weight:900; color:#075985; margin:8px 0 10px; letter-spacing:.5px;}
-.rangeWrap{position:relative; height:34px; margin-top:6px}.track,.fill{position:absolute; left:0; right:0; top:50%; height:5px; transform:translateY(-50%); border-radius:999px}.track{background:#dff4ff;border:1px solid #bdeaff}.fill{background:linear-gradient(90deg,rgba(125,211,252,.55),rgba(14,165,233,.85)); right:auto; width:0%}
-.rangeWrap input[type=range]{position:absolute; inset:0; width:100%; margin:0; appearance:none; background:none}.rangeWrap input[type=range]::-webkit-slider-runnable-track{height:8px; background:transparent; border:none}.rangeWrap input[type=range]::-moz-range-track{height:8px; background:transparent; border:none}.rangeWrap input::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:var(--blue); border:2px solid #fff; box-shadow:0 0 0 1px rgba(14,165,233,.35)}.rangeWrap input::-moz-range-thumb{width:18px; height:18px; border:none; border-radius:50%; background:var(--blue)}
-.yearTicks{display:flex; justify-content:space-between; color:var(--muted); font-size:11px; margin-top:2px}.quickYears{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}.quickYear{padding:5px 8px; border-radius:999px; font-size:12px}.quickYear.active{background:var(--blue-4); border-color:#bae6fd; color:#075985; font-weight:800}
-.tabGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px}.tabBtn{display:flex; align-items:center; justify-content:center; min-height:52px; font-weight:800; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(241,249,255,.95))}.tabBtn.active{border-color:rgba(14,165,233,.45); box-shadow:0 10px 24px rgba(14,165,233,.12); background:linear-gradient(180deg,rgba(235,248,255,.98),rgba(225,244,255,.98)); color:#075985}
-.layerList{display:grid; gap:8px}.layerItem{border:1px solid #e5eef5; border-radius:12px; padding:10px; background:#fff}.layerTop{display:flex; justify-content:space-between; gap:8px; align-items:center}.layerName{font-weight:800}.layerMeta{margin-top:4px; color:var(--muted); font-size:12px; word-break:break-all}.swatch{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px}.muted{color:var(--muted)}
-.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:12px}.toolbarLeft,.toolbarRight{display:flex; gap:8px; flex-wrap:wrap; align-items:center}.stats{color:var(--muted); font-size:13px;}
-.section{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.9); box-shadow:0 6px 18px rgba(15,23,42,.04); overflow:hidden}.section + .section{margin-top:12px}.sectionHead{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 16px 10px}.sectionTitle{margin:0; font-size:16px; font-weight:800}.sectionSub{margin:4px 0 0; font-size:12px; color:var(--muted)}
-.mapPanel{padding:0 14px 14px}.mapCanvasWrap{border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(240,248,255,.92)); min-height:650px; position:relative; overflow:hidden}#map{width:100%; height:650px; z-index:1}.leaflet-container{font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#dff4ff}.leaflet-popup-content-wrapper{border-radius:14px}.popupTitle{font-weight:900; margin-bottom:6px}.popupRow{color:#5b7285; margin-top:3px}.popupProps{max-height:180px; overflow:auto; border-top:1px solid #edf4f8; margin-top:8px; padding-top:6px}.popupProps table{border-collapse:collapse; width:100%}.popupProps td{border-bottom:1px solid #f0f5f8; padding:3px 4px; vertical-align:top}.popupProps td:first-child{font-weight:700; color:#335b70; width:38%}
-.legend{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:12px 0 0; color:var(--muted); font-size:12px}.legendItem{display:inline-flex; align-items:center; gap:6px}.legendLine{display:inline-block; width:24px; height:0; border-top:4px solid currentColor; border-radius:999px}.empty{border:1px dashed var(--line); border-radius:16px; padding:28px 16px; text-align:center; color:var(--muted); background:#fbfeff}.hidden{display:none !important}
-.loadingOverlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(900px 500px at 10% -10%, rgba(14,165,233,.18), transparent 55%), radial-gradient(1000px 600px at 100% 0%, rgba(2,132,199,.10), transparent 50%), rgba(244,251,255,.96); backdrop-filter:blur(10px); opacity:1; visibility:visible; transition:opacity .5s ease, visibility .5s ease}.loadingOverlay.hidden{opacity:0; visibility:hidden; pointer-events:none}.loadingPanel{width:min(520px,92vw); background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:22px; box-shadow:0 18px 48px rgba(15,23,42,.10); padding:26px 24px 22px}.loadingTitle{margin:0 0 8px; font-size:22px; font-weight:800}.loadingSub{margin:0 0 16px; color:var(--muted); font-size:14px; line-height:1.6}.loadingBar{position:relative; width:100%; height:12px; border-radius:999px; overflow:hidden; background:#e4eef4; border:1px solid #d7e5ef}.loadingBarFill{width:0%; height:100%; border-radius:999px; background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98)); transition:width .35s ease}.loadingMeta{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; color:var(--muted); font-size:13px}.loadingPercent{color:var(--text); font-weight:800; font-variant-numeric:tabular-nums}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:radial-gradient(900px 500px at 10% -10%,rgba(14,165,233,.18),transparent 55%),radial-gradient(1000px 600px at 100% 0%,rgba(2,132,199,.10),transparent 50%),var(--bg);overflow-x:hidden}
+.wrap{max-width:1500px;margin:0 auto;padding:20px 16px 28px;min-height:100vh}.head,.sidebar,.main,.pageFooter{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(8px);box-shadow:var(--shadow)}.head{padding:18px;margin-bottom:14px}.headTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}h1{margin:0 0 6px;font-size:28px}.sub,.note{margin:0;color:var(--muted)}.note{margin-top:8px;font-size:12px}.layout{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}.sidebar{padding:14px;position:sticky;top:12px}.main{padding:14px;min-height:0}@media(max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static}.headTop{flex-direction:column}}
+button,input[type=range]{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);padding:10px 12px;cursor:pointer}button:hover{border-color:#b9d6e6;background:#fcfeff}.langBtn{font-weight:800;white-space:nowrap}.controls{display:grid;gap:12px}.rangeBox,.filterBox,.statusBox{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfeff}.rangeLabel{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:var(--muted);font-size:12px}.yearNow{font-weight:900;color:#075985;font-size:20px}.yearTicks{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:4px}
+.range{width:100%;height:18px;background:transparent;accent-color:var(--blue);appearance:none}.range::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#bae6fd,#e0f2fe);border:1px solid #c7e9fb}.range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:999px;margin-top:-6px;background:#0ea5e9;border:3px solid #fff;box-shadow:0 0 0 1px rgba(14,165,233,.35)}.range::-moz-range-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#bae6fd,#e0f2fe);border:1px solid #c7e9fb}.range::-moz-range-thumb{width:18px;height:18px;border-radius:999px;background:#0ea5e9;border:3px solid #fff;box-shadow:0 0 0 1px rgba(14,165,233,.35)}
+.radioGrid{display:grid;gap:8px}.radioItem{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5eef5;border-radius:12px;background:#f8fcff}.radioItem:has(input:checked){background:#e0f2fe;border-color:#bae6fd;color:#075985}.radioItem input{accent-color:#0ea5e9}.btnRow{display:flex;gap:8px;flex-wrap:wrap}.mini{padding:7px 10px;border-radius:10px;font-size:12px}.statusText{color:var(--muted);font-size:12px}.statusText strong{color:var(--text)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}.stats{color:var(--muted);font-size:13px}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef8ff;border:1px solid #d6efff;color:#065f8f;font-size:12px}.section{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(15,23,42,.04)}.section+.section{margin-top:12px}.sectionHead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 10px}.sectionTitle{margin:0;font-size:16px;font-weight:800}.sectionSub{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.mapPanel{padding:0 14px 14px}.mapCanvasWrap{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#e8f8ff,#dff4ff);height:660px;position:relative;overflow:hidden}.mapCanvas{display:block;width:100%;height:100%;cursor:grab}.mapCanvas:active{cursor:grabbing}.legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 0 0;color:var(--muted);font-size:12px}.legendItem{display:inline-flex;align-items:center;gap:6px}.swatch{width:18px;height:10px;border-radius:999px;border:1px solid rgba(15,23,42,.15)}
+.summaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}@media(max-width:900px){.summaryGrid{grid-template-columns:1fr}}.summaryCard{border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px}.summaryCard h3{margin:0 0 10px;font-size:15px}.bigNum{font-size:30px;font-weight:900;color:#075985}.list{display:grid;gap:6px;color:var(--muted);font-size:12px}.fileOk{color:#047857}.fileMiss{color:#b45309}.fileErr{color:#b91c1c}.fileSub{color:#7c2d12}
+.loadingOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(900px 500px at 10% -10%,rgba(14,165,233,.18),transparent 55%),radial-gradient(1000px 600px at 100% 0%,rgba(2,132,199,.10),transparent 50%),rgba(244,251,255,.96);backdrop-filter:blur(10px);opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}.loadingOverlay.hidden{opacity:0;visibility:hidden;pointer-events:none}.loadingPanel{width:min(560px,92vw);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 48px rgba(15,23,42,.10);padding:26px 24px 22px}.loadingTitle{margin:0 0 8px;font-size:22px;font-weight:800}.loadingSub{margin:0 0 16px;color:var(--muted);font-size:14px}.loadingBar{height:12px;border-radius:999px;overflow:hidden;background:#e4eef4;border:1px solid #d7e5ef}.loadingBarFill{width:0%;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98));transition:width .25s ease}.loadingMeta{display:flex;justify-content:space-between;margin-top:12px;color:var(--muted);font-size:13px}.loadingPercent{font-weight:900;color:var(--text)}.pageFooter{padding:12px 14px;margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
 <body>
-<div class="loadingOverlay" id="loadingOverlay" aria-live="polite">
-  <div class="loadingPanel">
-    <h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2>
-    <p class="loadingSub" id="loadingSub">正在读取页面、目击记录与 Natural Earth 高精度海岸线，请稍候… / Loading page, sightings and Natural Earth high-resolution coastline…</p>
-    <div class="loadingBar" aria-hidden="true"><div class="loadingBarFill" id="loadingBarFill"></div></div>
-    <div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div>
-  </div>
-</div>
-
+<div class="loadingOverlay" id="loadingOverlay" aria-live="polite"><div class="loadingPanel"><h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2><p class="loadingSub" id="loadingSub">正在读取目击记录与 Natural Earth 高精度海岸线，请稍候… / Loading sighting records and Natural Earth coastline…</p><div class="loadingBar"><div class="loadingBarFill" id="loadingBarFill"></div></div><div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div></div></div>
 <div class="wrap">
-  <div class="head">
-    <div class="headTop">
-      <div>
-        <h1 id="titleMain">中华白海豚数据库</h1>
-        <p class="sub" id="subMain"></p>
-        <p class="note" id="loadNote"></p>
-      </div>
-      <button id="langBtn" class="langBtn" type="button">English</button>
-    </div>
-  </div>
-
+  <div class="head"><div class="headTop"><div><h1 id="titleMain">中华白海豚数据库</h1><p class="sub" id="subMain">香港与珠海水域中华白海豚目击记录。</p><p class="note" id="loadNote">—</p></div><button id="langBtn" class="langBtn" type="button">English</button></div></div>
   <div class="layout">
-    <aside class="sidebar">
-      <div class="controls">
-        <section class="controlCard">
-          <div class="controlTitle"><strong id="yearCardTitle"></strong><span id="yearHint"></span></div>
-          <div class="yearValue" id="yearValue">2025</div>
-          <div class="rangeWrap">
-            <div class="track"></div>
-            <div class="fill" id="rangeFill"></div>
-            <input id="yearSlider" type="range" min="2005" max="2025" step="1" value="2025" />
-          </div>
-          <div class="yearTicks"><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2025</span></div>
-          <div class="quickYears" id="quickYears"></div>
-        </section>
-
-        <section class="controlCard">
-          <div class="controlTitle"><strong id="regionTitle"></strong><span id="regionHint"></span></div>
-          <div class="tabGrid">
-            <button id="hkToggle" class="tabBtn active" type="button"></button>
-            <button id="zhToggle" class="tabBtn active" type="button"></button>
-          </div>
-        </section>
-
-        <section class="controlCard">
-          <div class="controlTitle"><strong id="loadedLayersTitle"></strong><span id="loadedLayersHint"></span></div>
-          <div class="layerList" id="layerList"></div>
-        </section>
-      </div>
-    </aside>
-
+    <aside class="sidebar"><div class="controls">
+      <div class="rangeBox"><div class="rangeLabel"><span id="yearLabel">年份</span><span class="yearNow" id="yearText">2005</span></div><input id="yearRange" class="range" type="range" min="2005" max="2025" step="1" value="2005"><div class="yearTicks"><span>2005</span><span>2025</span></div></div>
+      <div class="filterBox"><div class="rangeLabel"><span id="areaLabel">显示水域</span></div><div class="radioGrid"><label class="radioItem"><input type="checkbox" id="showHK" checked> <span id="showHKText">香港水域</span></label><label class="radioItem"><input type="checkbox" id="showZH" checked> <span id="showZHText">珠海水域</span></label></div></div>
+      <div class="filterBox"><div class="rangeLabel"><span id="viewLabel">视图</span></div><div class="btnRow"><button id="resetViewBtn" class="mini" type="button">回到最大地理范围</button><button id="zoomInBtn" class="mini" type="button">放大</button><button id="zoomOutBtn" class="mini" type="button">缩小</button></div></div>
+      <div class="statusBox"><div class="statusText" id="diagnosticText">—</div></div>
+    </div></aside>
     <main class="main">
-      <div class="toolbar">
-        <div class="toolbarLeft">
-          <div class="stats" id="stats">—</div>
-          <span class="pill" id="activeYearPill">2025</span>
-        </div>
-        <div class="toolbarRight">
-          <button id="fitBtn" type="button"></button>
-          <button id="reloadBtn" type="button"></button>
-        </div>
-      </div>
-
-      <section class="section">
-        <div class="sectionHead">
-          <div>
-            <h2 class="sectionTitle" id="mapTitle"></h2>
-            <p class="sectionSub" id="mapSub"></p>
-          </div>
-          <div class="tabActions"><span class="pill" id="baseMapPill"></span></div>
-        </div>
-        <div class="mapPanel">
-          <div class="mapCanvasWrap"><div id="map"></div></div>
-          <div class="legend">
-            <span id="legendLabel"></span>
-            <span class="legendItem" style="color:#0ea5e9"><span class="legendLine"></span><span id="legendHK"></span></span>
-            <span class="legendItem" style="color:#f59e0b"><span class="legendLine"></span><span id="legendZH"></span></span>
-            <span class="legendItem"><span class="swatch" style="background:#0ea5e9"></span><span id="legendPoint"></span></span>
-          </div>
-        </div>
-      </section>
+      <div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
+      <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub">固定最大地理范围，叠加当前年份的香港与珠海水域 GeoJSON。</p></div><div class="tabActions"><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span></div></div></section>
+      <div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
     </main>
   </div>
-  <div class="pageFooter" id="footerText"></div>
+  <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-const YEARS = Array.from({length:21}, (_, i) => 2005 + i);
-const HK_DIR = './sighting/hk/';
-const ZH_DIR = './sighting/zh/';
-const HK_FILES = Object.fromEntries(YEARS.map(y => [y, `${HK_DIR}hk_${y}.geojson`]));
-const ZH_PERIODS = [
-  { id:'zh_2005_2008_dry', start:2005, end:2008, displayStart:2005, displayEnd:2014, season:'dry', path:`${ZH_DIR}zh_2005-2008_dry.geojson` },
-  { id:'zh_2005_2008_wet', start:2005, end:2008, displayStart:2005, displayEnd:2014, season:'wet', path:`${ZH_DIR}zh_2005-2008_wet.geojson` },
-  { id:'zh_2015_2021', start:2015, end:2021, season:'all', path:`${ZH_DIR}zh_2015-2021.geojson` },
-  { id:'zh_2019_2023_dry', start:2019, end:2023, season:'dry', path:`${ZH_DIR}zh_2019-2023_dry.geojson` },
-  { id:'zh_2019_2023_wet', start:2019, end:2023, season:'wet', path:`${ZH_DIR}zh_2019-2023_wet.geojson` }
+const I18N={zh:{title:'中华白海豚数据库',sub:'香港与珠海水域中华白海豚目击记录。',langBtn:'English',year:'年份',area:'显示水域',hk:'香港水域',zh:'珠海水域',view:'视图',reset:'回到最大地理范围',zin:'放大',zout:'缩小',mapTitle:'目击记录地图',mapSub:'固定最大地理范围，叠加当前年份的香港与珠海水域 GeoJSON。',legend:'图例',hkLegend:'香港 GeoJSON',zhLegend:'珠海 GeoJSON',coast:'海岸线',max:'最大地理范围',loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,sum1:'当前年份',sum2:'当前显示要素',sum3:'最大地理范围',extent:'经度 / 纬度范围',noData:'当前年份没有加载到可显示的 GeoJSON。',matched:'当前年份命中文件',substitute:'珠海 2009–2014 使用 2005–2008 数据代替',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m 在线海岸线',coastFallback:'内置备用海岸线'},en:{title:'Chinese White Dolphin Database',sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',langBtn:'中文',year:'Year',area:'Waters',hk:'Hong Kong waters',zh:'Zhuhai waters',view:'View',reset:'Reset to maximum extent',zin:'Zoom in',zout:'Zoom out',mapTitle:'Sighting map',mapSub:'Fixed maximum extent with selected-year Hong Kong and Zhuhai GeoJSON overlays.',legend:'Legend',hkLegend:'Hong Kong GeoJSON',zhLegend:'Zhuhai GeoJSON',coast:'Coastline',max:'Maximum extent',loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,sum1:'Selected year',sum2:'Visible features',sum3:'Maximum extent',extent:'Longitude / latitude range',noData:'No displayable GeoJSON was loaded for this year.',matched:'Matched files',substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m online coastline',coastFallback:'Built-in fallback coastline'}};
+let lang=localStorage.getItem('cwd_lang')||'zh';
+const YEARS=Array.from({length:21},(_,i)=>2005+i);
+const HK_FILES=YEARS.map(y=>({region:'hk',start:y,end:y,label:`hk_${y}.geojson`,paths:[`./sighting/hk/hk_${y}.geojson`,`./hk_${y}.geojson`]}));
+const ZH_FILES=[
+ {region:'zh',start:2005,end:2008,displayStart:2005,displayEnd:2014,label:'zh_2005-2008_dry.geojson',paths:['./sighting/zh/zh_2005-2008_dry.geojson','./zh_2005-2008_dry.geojson']},
+ {region:'zh',start:2005,end:2008,displayStart:2005,displayEnd:2014,label:'zh_2005-2008_wet.geojson',paths:['./sighting/zh/zh_2005-2008_wet.geojson','./zh_2005-2008_wet.geojson']},
+ {region:'zh',start:2015,end:2021,displayStart:2015,displayEnd:2021,label:'zh_2015-2021.geojson',paths:['./sighting/zh/zh_2015-2021.geojson','./zh_2015-2021.geojson']},
+ {region:'zh',start:2019,end:2023,displayStart:2019,displayEnd:2023,label:'zh_2019-2023_dry.geojson',paths:['./sighting/zh/zh_2019-2023_dry.geojson','./zh_2019-2023_dry.geojson']},
+ {region:'zh',start:2019,end:2023,displayStart:2019,displayEnd:2023,label:'zh_2019-2023_wet.geojson',paths:['./sighting/zh/zh_2019-2023_wet.geojson','./zh_2019-2023_wet.geojson']}
 ];
-const BAS_CENTER = [22.28, 113.72];
-const NE_COAST_URLS = [
-  'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_coastline.geojson',
-  'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_coastline.geojson'
-];
-// 最大地理范围：固定覆盖香港—珠海—珠江口西侧研究区，避免每个年份按小范围自动缩放。
-const MAX_STUDY_BOUNDS = L.latLngBounds([21.55,112.35],[22.95,114.55]);
-const BAS_BOUNDS = MAX_STUDY_BOUNDS;
-const I18N = {
-  zh:{
-    title:'中华白海豚数据库',
-    sub:'按年份加载香港与珠海水域中华白海豚目击记录。',
-    note:'',
-    langBtn:'English', yearCardTitle:'年份选项卡', yearHint:'2005–2025', 
-    regionTitle:'显示水域', regionHint:'可单独开关', hk:'香港', zh:'珠海', loadedLayersTitle:'当前加载图层', loadedLayersHint:'随年份变化',
-    mapTitle:'目击记录地图', mapSub:'大卡片固定为香港—珠海最大地理范围；GeoJSON 面/点要素覆盖在 Natural Earth 高精度海岸线上。', fit:'回到最大范围', reload:'重新加载',
-    legendLabel:'图例', legendHK:'香港记录', legendZH:'珠海记录', legendPoint:'点状目击记录', baseNE:'Natural Earth 10m 高精度海岸线',
-    stats:(year,total,hk,zh)=>`${year} 年当前显示 ${total} 个要素｜香港 ${hk}｜珠海 ${zh}`,
-    loadingTitle:'正在加载', loadingTitleEn:'Loading', loadingSub:'正在读取页面与地图，请稍候…', loadingSubEn:'Loading page and map, please wait…', preparing:'准备中', preparingEn:'Preparing…', loadingMap:'正在初始化 Natural Earth 海岸线', loadingMapEn:'Initializing Natural Earth coastline', loadingData:'正在读取目击记录', loadingDataEn:'Loading sightings', done:'加载完成', doneEn:'Completed',
-    noLayer:'该年份没有匹配的珠海时间段，或图层尚未成功读取。', failed:'读取失败', features:'个要素', season:{dry:'枯季', wet:'湿季', all:'全年/综合'}, footer:'© 中华白海豚数据库｜海岸线来自 Natural Earth 10m，目击记录来自本站 sighting 目录。',
-    popupLayer:'图层', popupYear:'年份', popupRegion:'水域', popupSeason:'季节', popupProps:'属性'
-  },
-  en:{
-    title:'Chinese White Dolphin Database',
-    sub:'Load Chinese white dolphin sighting records for Hong Kong and Zhuhai waters by year.',
-    note:'',
-    langBtn:'中文', yearCardTitle:'Year tab', yearHint:'2005–2025', 
-    regionTitle:'Visible waters', regionHint:'Toggle separately', hk:'Hong Kong', zh:'Zhuhai', loadedLayersTitle:'Loaded layers', loadedLayersHint:'Changes by year',
-    mapTitle:'Sighting map', mapSub:'The large map card is fixed to the maximum Hong Kong–Zhuhai extent; GeoJSON features are overlaid on the Natural Earth high-resolution coastline.', fit:'Fit maximum extent', reload:'Reload',
-    legendLabel:'Legend', legendHK:'Hong Kong records', legendZH:'Zhuhai records', legendPoint:'Point sightings', baseNE:'Natural Earth 10m high-resolution coastline',
-    stats:(year,total,hk,zh)=>`${total} features shown for ${year} | Hong Kong ${hk} | Zhuhai ${zh}`,
-    loadingTitle:'Loading', loadingTitleEn:'正在加载', loadingSub:'Loading page and map, please wait…', loadingSubEn:'正在读取页面与地图，请稍候…', preparing:'Preparing…', preparingEn:'准备中', loadingMap:'Initializing Natural Earth coastline', loadingMapEn:'正在初始化 Natural Earth 海岸线', loadingData:'Loading sightings', loadingDataEn:'正在读取目击记录', done:'Completed', doneEn:'加载完成',
-    noLayer:'No matching Zhuhai period for this year, or layers have not loaded successfully.', failed:'Failed', features:'features', season:{dry:'Dry season', wet:'Wet season', all:'All / composite'}, footer:'© Chinese White Dolphin Database | Coastline from Natural Earth 10m; sighting records from the local sighting directory.',
-    popupLayer:'Layer', popupYear:'Year', popupRegion:'Waters', popupSeason:'Season', popupProps:'Properties'
-  }
-};
-let lang = localStorage.getItem('cwd_lang') || 'zh';
-let currentYear = Number(localStorage.getItem('cwd_year') || 2005);
-if(!YEARS.includes(currentYear)) currentYear = 2005;
-
-let showHK = localStorage.getItem('cwd_show_hk') !== '0';
-let showZH = localStorage.getItem('cwd_show_zh') !== '0';
-let map, coastlineLayer, layerGroup;
-const cache = new Map();
-const el = Object.fromEntries(['loadingOverlay','loadingTitle','loadingSub','loadingStatus','loadingPercent','loadingBarFill','titleMain','subMain','loadNote','langBtn','yearCardTitle','yearHint','yearValue','yearSlider','rangeFill','quickYears','regionTitle','regionHint','hkToggle','zhToggle','loadedLayersTitle','loadedLayersHint','layerList','stats','activeYearPill','fitBtn','reloadBtn','mapTitle','mapSub','baseMapPill','legendLabel','legendHK','legendZH','legendPoint','footerText'].map(id => [id, document.getElementById(id)]));
-function t(){return I18N[lang];}
-function esc(s){return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function updateLoading(progress, statusKey){
-  const p = Math.max(0, Math.min(100, Number(progress)||0));
-  el.loadingPercent.textContent = `${p.toFixed(2)}%`;
-  el.loadingBarFill.style.width = `${p}%`;
-  el.loadingTitle.textContent = `${t().loadingTitle} / ${t().loadingTitleEn}`;
-  el.loadingSub.textContent = `${t().loadingSub} / ${t().loadingSubEn}`;
-  const a = t()[statusKey] || ''; const b = t()[`${statusKey}En`] || '';
-  if(statusKey) el.loadingStatus.textContent = b ? `${a} / ${b}` : a;
-}
-function hideLoading(){ updateLoading(100,'done'); setTimeout(()=>el.loadingOverlay.classList.add('hidden'), 120); }
-function layerStyle(region, season){
-  const isHK = region === 'hk';
-  const color = isHK ? '#0ea5e9' : '#f59e0b';
-  const dashArray = season === 'wet' ? '6 5' : (season === 'dry' ? '1 0' : '3 4');
-  return {color, weight:1.4, opacity:.98, fillColor:color, fillOpacity:isHK?.48:.42, dashArray, interactive:true};
-}
-function pointMarker(feature, latlng, meta){
-  const isHK = meta.region === 'hk';
-  return L.circleMarker(latlng, {radius:5.5, color:isHK?'#0284c7':'#d97706', weight:1.5, fillColor:isHK?'#38bdf8':'#fbbf24', fillOpacity:.85});
-}
-function propsTable(props){
-  const entries = Object.entries(props || {}).filter(([k,v]) => v !== null && v !== undefined && String(v).trim() !== '').slice(0, 24);
-  if(!entries.length) return '';
-  return `<div class="popupProps"><b>${esc(t().popupProps)}</b><table>${entries.map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(typeof v === 'object' ? JSON.stringify(v) : v)}</td></tr>`).join('')}</table></div>`;
-}
-function bindPopup(feature, layer, meta){
-  const props = feature.properties || {};
-  const title = props.name || props.title || props.id || props.ID || meta.label;
-  layer.bindPopup(`<div class="popupTitle">${esc(title)}</div><div class="popupRow"><b>${esc(t().popupRegion)}:</b> ${esc(meta.regionLabel)}</div><div class="popupRow"><b>${esc(t().popupYear)}:</b> ${esc(currentYear)}</div><div class="popupRow"><b>${esc(t().popupLayer)}:</b> ${esc(meta.file)}</div>${meta.season ? `<div class="popupRow"><b>${esc(t().popupSeason)}:</b> ${esc(t().season[meta.season] || meta.season)}</div>` : ''}${propsTable(props)}`);
-}
-function countFeatures(geo){return Array.isArray(geo?.features) ? geo.features.length : 0;}
-async function fetchGeoJson(path){
-  if(cache.has(path)) return cache.get(path);
-  const res = await fetch(path, {cache:'no-store'});
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  const geo = await res.json();
-  cache.set(path, geo);
-  return geo;
-}
-function zhFilesForYear(year){return ZH_PERIODS.filter(p => year >= (p.displayStart ?? p.start) && year <= (p.displayEnd ?? p.end));}
-function filesForYear(year){
-  const files = [];
-  if(showHK) files.push({region:'hk', regionLabel:t().hk, season:'all', file:`hk_${year}.geojson`, path:HK_FILES[year], label:`${t().hk} ${year}`});
-  if(showZH) zhFilesForYear(year).forEach(p => files.push({region:'zh', regionLabel:t().zh, season:p.season, file:p.path.split('/').pop(), path:p.path, label:`${t().zh} ${p.start}-${p.end} ${t().season[p.season]||p.season}`}));
-  return files;
-}
-function renderStaticTexts(){
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-  document.title = t().title;
-  el.titleMain.textContent = t().title; el.subMain.textContent = t().sub; el.loadNote.textContent = t().note; el.langBtn.textContent = t().langBtn;
-  el.yearCardTitle.textContent = t().yearCardTitle; el.yearHint.textContent = t().yearHint;
-  el.regionTitle.textContent = t().regionTitle; el.regionHint.textContent = t().regionHint;
-  el.hkToggle.textContent = t().hk; el.zhToggle.textContent = t().zh; el.loadedLayersTitle.textContent = t().loadedLayersTitle; el.loadedLayersHint.textContent = t().loadedLayersHint;
-  el.fitBtn.textContent = t().fit; el.reloadBtn.textContent = t().reload; el.mapTitle.textContent = t().mapTitle; el.mapSub.textContent = t().mapSub;
-  el.legendLabel.textContent = t().legendLabel; el.legendHK.textContent = t().legendHK; el.legendZH.textContent = t().legendZH; el.legendPoint.textContent = t().legendPoint;
-  el.footerText.textContent = t().footer;
-  el.baseMapPill.textContent = t().baseNE;
-  el.hkToggle.classList.toggle('active', showHK); el.zhToggle.classList.toggle('active', showZH);
-}
-function renderYearControls(){
-  el.yearSlider.value = currentYear; el.yearValue.textContent = currentYear; el.activeYearPill.textContent = currentYear;
-  el.rangeFill.style.width = `${((currentYear-2005)/(2025-2005))*100}%`;
-  el.quickYears.innerHTML = [2005,2008,2015,2019,2021,2023,2025].map(y => `<button class="quickYear ${y===currentYear?'active':''}" type="button" data-year="${y}">${y}</button>`).join('');
-  el.quickYears.querySelectorAll('[data-year]').forEach(btn => btn.addEventListener('click', () => {currentYear=Number(btn.dataset.year); localStorage.setItem('cwd_year', currentYear); renderAll();}));
-}
-function coastFeatureInBounds(feature){
-  let hit=false;
-  function walk(c){
-    if(hit) return;
-    if(Array.isArray(c) && c.length>=2 && Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1]))){
-      const lon=Number(c[0]), lat=Number(c[1]);
-      if(lon>=111.3 && lon<=116.2 && lat>=20.8 && lat<=23.8) hit=true;
-    }else if(Array.isArray(c)){ c.forEach(walk); }
-  }
-  walk(feature?.geometry?.coordinates);
-  return hit;
-}
-async function loadNaturalEarthCoastline(){
-  for(const url of NE_COAST_URLS){
-    try{
-      const res=await fetch(url,{cache:'force-cache'});
-      if(!res.ok) continue;
-      const geo=await res.json();
-      const features=(geo.features||[]).filter(coastFeatureInBounds);
-      coastlineLayer=L.geoJSON({type:'FeatureCollection',features},{
-        renderer:L.canvas({padding:0.5}),
-        interactive:false,
-        style:{color:'#335b70',weight:1.45,opacity:.92,lineCap:'round',lineJoin:'round'}
-      }).addTo(map);
-      return true;
-    }catch(err){}
-  }
-  coastlineLayer=null;
-  return false;
-}
-function initMap(){
-  map = L.map('map', {center:BAS_CENTER, zoom:9, zoomControl:true, scrollWheelZoom:true, preferCanvas:true, zoomAnimation:false, fadeAnimation:false, markerZoomAnimation:false});
-  map.setMaxBounds(L.latLngBounds([20.8,111.3],[23.8,116.2]));
-  map.fitBounds(MAX_STUDY_BOUNDS, {animate:false});
-  layerGroup = L.featureGroup().addTo(map);
-}
-function switchBasemap(){
-  if(coastlineLayer) coastlineLayer.bringToBack();
-}
-async function renderLayers(){
-  updateLoading(20,'loadingData');
-  layerGroup.clearLayers();
-  const metas = filesForYear(currentYear);
-  const loaded = [];
-  let hkCount = 0, zhCount = 0;
-  for(let i=0; i<metas.length; i++){
-    const meta = metas[i];
-    try{
-      updateLoading(24 + (i / Math.max(1,metas.length)) * 56, 'loadingData');
-      const geo = await fetchGeoJson(meta.path);
-      const n = countFeatures(geo);
-      if(meta.region === 'hk') hkCount += n; else zhCount += n;
-      const layer = L.geoJSON(geo, {
-        style: () => layerStyle(meta.region, meta.season),
-        pointToLayer: (feature, latlng) => pointMarker(feature, latlng, meta),
-        onEachFeature: (feature, lyr) => bindPopup(feature, lyr, meta)
-      });
-      layer.addTo(layerGroup);
-      loaded.push({...meta, ok:true, count:n});
-    }catch(err){
-      loaded.push({...meta, ok:false, error:String(err.message || err), count:0});
-    }
-  }
-  el.stats.textContent = t().stats(currentYear, hkCount + zhCount, hkCount, zhCount);
-  renderLayerList(loaded);
-  updateLoading(88,'loadingData');
-  // 不再按单年/单文件图层自动缩到很小的局部范围；始终保持最大研究区视野。
-  map.fitBounds(MAX_STUDY_BOUNDS, {animate:false});
-  layerGroup.bringToFront();
-  hideLoading();
-}
-function renderLayerList(items){
-  if(!items.length){ el.layerList.innerHTML = `<div class="empty">${esc(t().noLayer)}</div>`; return; }
-  const ok=items.filter(x=>x.ok).length, failed=items.length-ok;
-  const borrowed=currentYear>=2009 && currentYear<=2014 && items.some(x=>x.region==='zh' && x.file.includes('2005-2008'));
-  el.layerList.innerHTML = `<div class="layerItem"><div class="layerTop"><span class="layerName">${lang==='zh'?'当前命中文件':'Matched files'}</span><span class="pill">${ok}/${items.length}</span></div><div class="layerMeta">${failed?`${lang==='zh'?'读取失败':'Failed'}：${failed}`:(lang==='zh'?'全部成功读取':'All loaded')}</div>${borrowed?`<div class="layerMeta">${lang==='zh'?'珠海 2009–2014 使用 2005–2008 dry/wet 数据代替':'Zhuhai 2009–2014 uses 2005–2008 dry/wet data as substitute'}</div>`:''}</div>`;
-}
-function renderAll(){
-  renderStaticTexts(); renderYearControls(); switchBasemap();
-  el.loadingOverlay.classList.remove('hidden');
-  updateLoading(12,'loadingData');
-  renderLayers();
-}
-function bindEvents(){
-  el.langBtn.addEventListener('click', () => {lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('cwd_lang', lang); renderAll();});
-  let yearRenderTimer = null;
-  el.yearSlider.addEventListener('input', () => {
-    currentYear = Number(el.yearSlider.value);
-    localStorage.setItem('cwd_year', currentYear);
-    renderStaticTexts(); renderYearControls();
-    clearTimeout(yearRenderTimer);
-    yearRenderTimer = setTimeout(() => renderAll(), 180);
-  });
-  el.hkToggle.addEventListener('click', () => {showHK=!showHK; localStorage.setItem('cwd_show_hk', showHK?'1':'0'); renderAll();});
-  el.zhToggle.addEventListener('click', () => {showZH=!showZH; localStorage.setItem('cwd_show_zh', showZH?'1':'0'); renderAll();});
-  el.fitBtn.addEventListener('click', () => { map.fitBounds(MAX_STUDY_BOUNDS, {animate:false}); });
-  el.reloadBtn.addEventListener('click', () => {cache.clear(); renderAll();});
-}
-(async function main(){
-  updateLoading(2,'preparing');
-  renderStaticTexts(); renderYearControls();
-  updateLoading(12,'loadingMap');
-  initMap(); bindEvents();
-  await loadNaturalEarthCoastline();
-  renderAll();
-})();
+const FILES=[...HK_FILES,...ZH_FILES];
+const NATURAL_EARTH_COAST_URLS=['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_coastline.geojson','https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_coastline.geojson'];
+const DEFAULT_EXTENT={minLon:113.38,maxLon:114.55,minLat:21.70,maxLat:22.80};
+const FALLBACK_COAST={mainland:[[[113.38,22.80],[114.55,22.80],[114.55,22.55],[114.44,22.51],[114.35,22.50],[114.25,22.55],[114.16,22.52],[114.05,22.48],[113.94,22.45],[113.84,22.39],[113.77,22.31],[113.69,22.23],[113.60,22.16],[113.50,22.10],[113.38,22.04],[113.38,22.80]]],islands:[[[113.49,22.27],[113.62,22.30],[113.70,22.24],[113.68,22.17],[113.57,22.13],[113.49,22.17],[113.49,22.27]],[[113.80,22.18],[113.92,22.21],[114.03,22.18],[114.10,22.24],[114.18,22.28],[114.26,22.26],[114.30,22.20],[114.25,22.15],[114.13,22.12],[114.02,22.14],[113.90,22.12],[113.82,22.13],[113.80,22.18]],[[113.64,22.06],[113.78,22.08],[113.86,22.04],[113.82,21.97],[113.70,21.95],[113.62,21.99],[113.64,22.06]],[[114.18,22.05],[114.28,22.07],[114.33,22.02],[114.30,21.96],[114.20,21.95],[114.14,22.00],[114.18,22.05]]],labels:[{name:'Zhuhai / 珠海',lon:113.58,lat:22.27},{name:'Hong Kong / 香港',lon:114.14,lat:22.31},{name:'Pearl River Estuary / 珠江口',lon:113.86,lat:22.31}]};
+const el={loadingOverlay:document.getElementById('loadingOverlay'),loadingBarFill:document.getElementById('loadingBarFill'),loadingPercent:document.getElementById('loadingPercent'),loadingStatus:document.getElementById('loadingStatus'),titleMain:document.getElementById('titleMain'),subMain:document.getElementById('subMain'),langBtn:document.getElementById('langBtn'),loadNote:document.getElementById('loadNote'),yearLabel:document.getElementById('yearLabel'),yearRange:document.getElementById('yearRange'),yearText:document.getElementById('yearText'),showHK:document.getElementById('showHK'),showZH:document.getElementById('showZH'),showHKText:document.getElementById('showHKText'),showZHText:document.getElementById('showZHText'),areaLabel:document.getElementById('areaLabel'),viewLabel:document.getElementById('viewLabel'),resetViewBtn:document.getElementById('resetViewBtn'),zoomInBtn:document.getElementById('zoomInBtn'),zoomOutBtn:document.getElementById('zoomOutBtn'),diagnosticText:document.getElementById('diagnosticText'),stats:document.getElementById('stats'),activePill:document.getElementById('activePill'),mapTitle:document.getElementById('mapTitle'),mapSub:document.getElementById('mapSub'),canvas:document.getElementById('mapCanvas'),legendLabel:document.getElementById('legendLabel'),hkLegend:document.getElementById('hkLegend'),zhLegend:document.getElementById('zhLegend'),coastLegend:document.getElementById('coastLegend'),sumTitle1:document.getElementById('sumTitle1'),sumTitle2:document.getElementById('sumTitle2'),sumTitle3:document.getElementById('sumTitle3'),yearBig:document.getElementById('yearBig'),yearFiles:document.getElementById('yearFiles'),featureBig:document.getElementById('featureBig'),featureList:document.getElementById('featureList'),extentList:document.getElementById('extentList')};
+let records=[],diagnostics={ok:0,miss:0,err:0},selectedYear=2005,maxExtent={...DEFAULT_EXTENT},view={scale:1,dx:0,dy:0},dragging=false,lastPt=null,coastLines=[],coastStatus='未加载 / not loaded';
+function T(){return I18N[lang]} function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function setProgress(p,msg){p=Math.max(0,Math.min(100,p));el.loadingBarFill.style.width=p+'%';el.loadingPercent.textContent=p.toFixed(0)+'%';if(msg)el.loadingStatus.textContent=msg}
+async function fetchFirst(paths){let missed=0;for(const p of paths){try{const r=await fetch(p,{cache:'no-store'});if(!r.ok){missed++;continue}return {path:p,json:await r.json(),missed};}catch(e){missed++;}}return {path:'',json:null,missed};}
+function isCoordPair(a){return Array.isArray(a)&&a.length>=2&&Number.isFinite(Number(a[0]))&&Number.isFinite(Number(a[1]));}
+function forEachCoord(coords,cb){if(isCoordPair(coords)){cb(coords);return} if(Array.isArray(coords)) coords.forEach(c=>forEachCoord(c,cb));}
+function looksSwapped(geo){let n=0,bad=0;forEachCoord(geo.coordinates||[],pt=>{const x=Number(pt[0]),y=Number(pt[1]);n++; if((x>20&&x<23)&&(y>113&&y<115))bad++;});return n>0&&bad/n>0.7;}
+function swapCoords(coords){if(isCoordPair(coords))return [Number(coords[1]),Number(coords[0])];return Array.isArray(coords)?coords.map(swapCoords):coords;}
+function normalizeGeoJSON(g){if(!g||g.type!=='FeatureCollection'||!Array.isArray(g.features))return null;g.features.forEach(f=>{if(f&&f.geometry&&looksSwapped(f.geometry))f.geometry.coordinates=swapCoords(f.geometry.coordinates);});return g;}
+function getBounds(features){let minLon=Infinity,maxLon=-Infinity,minLat=Infinity,maxLat=-Infinity;features.forEach(f=>{forEachCoord(f.geometry?.coordinates,pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);if(lon>=110&&lon<=116&&lat>=19&&lat<=25){minLon=Math.min(minLon,lon);maxLon=Math.max(maxLon,lon);minLat=Math.min(minLat,lat);maxLat=Math.max(maxLat,lat);}})});return Number.isFinite(minLon)?{minLon,maxLon,minLat,maxLat}:null;}
+function padExtent(b,p=0.16){const w=b.maxLon-b.minLon||1,h=b.maxLat-b.minLat||1;return {minLon:b.minLon-w*p,maxLon:b.maxLon+w*p,minLat:b.minLat-h*p,maxLat:b.maxLat+h*p};}
+function union(a,b){return {minLon:Math.min(a.minLon,b.minLon),maxLon:Math.max(a.maxLon,b.maxLon),minLat:Math.min(a.minLat,b.minLat),maxLat:Math.max(a.maxLat,b.maxLat)}}
+function bboxIntersectsLine(line,b,pad=0.08){return line.some(pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);return lon>=b.minLon-pad&&lon<=b.maxLon+pad&&lat>=b.minLat-pad&&lat<=b.maxLat+pad;});}
+function geometryToLines(geom){if(!geom)return[];if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;if(geom.type==='Polygon')return geom.coordinates;if(geom.type==='MultiPolygon')return geom.coordinates.flat();if(geom.type==='GeometryCollection')return (geom.geometries||[]).flatMap(geometryToLines);return[];}
+async function loadNaturalEarthCoast(){for(const url of NATURAL_EARTH_COAST_URLS){try{setProgress(86,'读取 Natural Earth 10m 海岸线 / Loading coastline…');const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const lines=[];(geo.features||[]).forEach(f=>geometryToLines(f.geometry).forEach(line=>{if(Array.isArray(line)&&line.length>1&&bboxIntersectsLine(line,DEFAULT_EXTENT,1.0))lines.push(line)}));if(lines.length){coastLines=lines;coastStatus=T().coastOnline;return true;}}catch(e){}}coastLines=[];coastStatus=T().coastFallback;return false;}
+async function loadAll(){setProgress(5,'准备中 / Preparing…');let unionB=null;for(let i=0;i<FILES.length;i++){const spec=FILES[i];setProgress(5+76*(i/FILES.length),`读取 ${spec.label}`);const got=await fetchFirst(spec.paths);diagnostics.miss+=got.missed;if(!got.json){diagnostics.miss++;continue}try{const geo=normalizeGeoJSON(got.json);if(!geo)throw new Error('Not FeatureCollection');const b=getBounds(geo.features);records.push({...spec,path:got.path,geo,b,features:geo.features});diagnostics.ok++;if(b)unionB=unionB?union(unionB,b):b;}catch(e){diagnostics.err++;}}
+maxExtent=padExtent(unionB?union(unionB,DEFAULT_EXTENT):DEFAULT_EXTENT,0.03);await loadNaturalEarthCoast();resetView();setProgress(94,'渲染 / Rendering…');}
+function resetView(){view={scale:1,dx:0,dy:0};draw();}
+function recordVisibleForYear(r,y){const ds=Number.isFinite(r.displayStart)?r.displayStart:r.start;const de=Number.isFinite(r.displayEnd)?r.displayEnd:r.end;return y>=ds&&y<=de;}
+function currentRecords(){return records.filter(r=>recordVisibleForYear(r,selectedYear)&&((r.region==='hk'&&el.showHK.checked)||(r.region==='zh'&&el.showZH.checked)));}
+function currentFeatures(){return currentRecords().flatMap(r=>r.features.map(f=>({feature:f,region:r.region,label:r.label,path:r.path,substituted:r.region==='zh'&&selectedYear>=2009&&selectedYear<=2014&&r.start===2005&&r.end===2008})));}
+function resizeCanvas(){const rect=el.canvas.getBoundingClientRect();const dpr=Math.max(devicePixelRatio||1,1);el.canvas.width=Math.max(1,Math.round(rect.width*dpr));el.canvas.height=Math.max(1,Math.round(rect.height*dpr));el.canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);}
+function baseProjection(){const rect=el.canvas.getBoundingClientRect();const pad=42;const w=rect.width-pad*2,h=rect.height-pad*2;const lonW=maxExtent.maxLon-maxExtent.minLon,latH=maxExtent.maxLat-maxExtent.minLat;const s=Math.min(w/lonW,h/latH)*view.scale;const cx=(maxExtent.minLon+maxExtent.maxLon)/2,cy=(maxExtent.minLat+maxExtent.maxLat)/2;return {project(lon,lat){return [rect.width/2+(lon-cx)*s+view.dx,rect.height/2-(lat-cy)*s+view.dy]},unproject(x,y){return [cx+(x-rect.width/2-view.dx)/s,cy-(y-rect.height/2-view.dy)/s]},s,rect};}
+function pathLine(ctx,line,proj,close=false){let started=false;line.forEach(pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);if(!Number.isFinite(lon)||!Number.isFinite(lat))return;const [x,y]=proj.project(lon,lat);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);});if(started&&close)ctx.closePath();}
+function drawFallbackCoast(ctx,proj){ctx.save();ctx.beginPath();[...FALLBACK_COAST.mainland,...FALLBACK_COAST.islands].forEach(poly=>pathLine(ctx,poly[0]||poly,proj,true));ctx.fillStyle='#eef3e6';ctx.strokeStyle='#9fb091';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();ctx.restore();}
+function drawNaturalEarthCoast(ctx,proj){if(!coastLines.length){drawFallbackCoast(ctx,proj);return;}ctx.save();ctx.strokeStyle='rgba(36,77,98,.92)';ctx.lineWidth=Math.max(1.05,Math.min(2.2,1.15*view.scale));ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();coastLines.forEach(line=>pathLine(ctx,line,proj,false));ctx.stroke();ctx.restore();}
+function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [geom.coordinates];if(geom.type==='MultiPolygon')return geom.coordinates;if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;return[]}
+function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*10)/10;lon<=e.maxLon;lon+=0.1){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*10)/10;lat<=e.maxLat;lat+=0.1){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
+function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
+function draw(){if(!el.canvas)return;resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);updateInfo(info);}
+function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=selectedYear>=2009&&selectedYear<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
+function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
+function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;draw();});[el.showHK,el.showZH].forEach(x=>x.addEventListener('change',draw));el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw();},{passive:false});window.addEventListener('resize',draw);}
+(async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
 </script>
 </body>
 </html>
