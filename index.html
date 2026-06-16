@@ -52,7 +52,7 @@ button:hover,select:hover{border-color:#b9d6e6; background:#fcfeff}.langBtn{whit
 .layerList{display:grid; gap:8px}.layerItem{border:1px solid #e5eef5; border-radius:12px; padding:10px; background:#fff}.layerTop{display:flex; justify-content:space-between; gap:8px; align-items:center}.layerName{font-weight:800}.layerMeta{margin-top:4px; color:var(--muted); font-size:12px; word-break:break-all}.swatch{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px}.muted{color:var(--muted)}
 .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:12px}.toolbarLeft,.toolbarRight{display:flex; gap:8px; flex-wrap:wrap; align-items:center}.stats{color:var(--muted); font-size:13px;}
 .section{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.9); box-shadow:0 6px 18px rgba(15,23,42,.04); overflow:hidden}.section + .section{margin-top:12px}.sectionHead{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 16px 10px}.sectionTitle{margin:0; font-size:16px; font-weight:800}.sectionSub{margin:4px 0 0; font-size:12px; color:var(--muted)}
-.mapPanel{padding:0 14px 14px}.mapCanvasWrap{border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(240,248,255,.92)); min-height:650px; position:relative; overflow:hidden}#map{width:100%; height:650px; z-index:1}.leaflet-container{font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#dff4ff}.leaflet-tile{image-rendering:auto;will-change:transform;transition:opacity .12s linear}.leaflet-pane.leaflet-overlay-pane{z-index:450}.leaflet-pane.sighting-pane{z-index:650}.leaflet-interactive{cursor:pointer}.leaflet-popup-content-wrapper{border-radius:14px}.popupTitle{font-weight:900; margin-bottom:6px}.popupRow{color:#5b7285; margin-top:3px}.popupProps{max-height:180px; overflow:auto; border-top:1px solid #edf4f8; margin-top:8px; padding-top:6px}.popupProps table{border-collapse:collapse; width:100%}.popupProps td{border-bottom:1px solid #f0f5f8; padding:3px 4px; vertical-align:top}.popupProps td:first-child{font-weight:700; color:#335b70; width:38%}
+.mapPanel{padding:0 14px 14px}.mapCanvasWrap{border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(240,248,255,.92)); min-height:650px; position:relative; overflow:hidden}#map{width:100%; height:650px; z-index:1}.leaflet-container{font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#dff4ff}.leaflet-popup-content-wrapper{border-radius:14px}.popupTitle{font-weight:900; margin-bottom:6px}.popupRow{color:#5b7285; margin-top:3px}.popupProps{max-height:180px; overflow:auto; border-top:1px solid #edf4f8; margin-top:8px; padding-top:6px}.popupProps table{border-collapse:collapse; width:100%}.popupProps td{border-bottom:1px solid #f0f5f8; padding:3px 4px; vertical-align:top}.popupProps td:first-child{font-weight:700; color:#335b70; width:38%}
 .legend{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:12px 0 0; color:var(--muted); font-size:12px}.legendItem{display:inline-flex; align-items:center; gap:6px}.legendLine{display:inline-block; width:24px; height:0; border-top:4px solid currentColor; border-radius:999px}.empty{border:1px dashed var(--line); border-radius:16px; padding:28px 16px; text-align:center; color:var(--muted); background:#fbfeff}.hidden{display:none !important}
 .loadingOverlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(900px 500px at 10% -10%, rgba(14,165,233,.18), transparent 55%), radial-gradient(1000px 600px at 100% 0%, rgba(2,132,199,.10), transparent 50%), rgba(244,251,255,.96); backdrop-filter:blur(10px); opacity:1; visibility:visible; transition:opacity .5s ease, visibility .5s ease}.loadingOverlay.hidden{opacity:0; visibility:hidden; pointer-events:none}.loadingPanel{width:min(520px,92vw); background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:22px; box-shadow:0 18px 48px rgba(15,23,42,.10); padding:26px 24px 22px}.loadingTitle{margin:0 0 8px; font-size:22px; font-weight:800}.loadingSub{margin:0 0 16px; color:var(--muted); font-size:14px; line-height:1.6}.loadingBar{position:relative; width:100%; height:12px; border-radius:999px; overflow:hidden; background:#e4eef4; border:1px solid #d7e5ef}.loadingBarFill{width:0%; height:100%; border-radius:999px; background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98)); transition:width .35s ease}.loadingMeta{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; color:var(--muted); font-size:13px}.loadingPercent{color:var(--text); font-weight:800; font-variant-numeric:tabular-nums}
 </style>
@@ -166,7 +166,9 @@ const ZH_PERIODS = [
   { id:'zh_2019_2023_wet', start:2019, end:2023, season:'wet', path:`${ZH_DIR}zh_2019-2023_wet.geojson` }
 ];
 const BAS_CENTER = [22.28, 113.72];
-const BAS_BOUNDS = L.latLngBounds([21.7,112.55],[22.95,115.0]);
+// 最大地理范围：固定覆盖香港—珠海—珠江口西侧研究区，避免每个年份按小范围自动缩放。
+const MAX_STUDY_BOUNDS = L.latLngBounds([21.55,112.35],[22.95,114.55]);
+const BAS_BOUNDS = MAX_STUDY_BOUNDS;
 const I18N = {
   zh:{
     title:'中华白海豚数据库',
@@ -174,11 +176,11 @@ const I18N = {
     note:'数据路径：sighting/hk/hk_2005.geojson 至 hk_2025.geojson；sighting/zh/ 下按时间段与枯/湿季加载。',
     langBtn:'English', yearCardTitle:'年份选项卡', yearHint:'2005–2025', mapTypeTitle:'底图类型', mapTypeHint:'公开在线底图', admin:'行政区', satellite:'卫星遥感',
     regionTitle:'显示水域', regionHint:'可单独开关', hk:'香港', zh:'珠海', loadedLayersTitle:'当前加载图层', loadedLayersHint:'随年份变化',
-    mapTitle:'目击记录地图', mapSub:'右侧大卡片使用公开在线底图；目击 GeoJSON 用 Canvas 置顶渲染，并自动缩放到香港—珠海范围。', fit:'回到研究区', reload:'重新加载',
+    mapTitle:'目击记录地图', mapSub:'右侧大卡片固定为香港—珠海最大地理范围；GeoJSON 面/点要素覆盖在公开在线底图上。', fit:'回到最大范围', reload:'重新加载',
     legendLabel:'图例', legendHK:'香港记录', legendZH:'珠海记录', legendPoint:'点状目击记录', baseAdmin:'行政区底图', baseSatellite:'卫星遥感底图',
     stats:(year,total,hk,zh)=>`${year} 年当前显示 ${total} 个要素｜香港 ${hk}｜珠海 ${zh}`,
     loadingTitle:'正在加载', loadingTitleEn:'Loading', loadingSub:'正在读取页面与地图，请稍候…', loadingSubEn:'Loading page and map, please wait…', preparing:'准备中', preparingEn:'Preparing…', loadingMap:'正在初始化公开底图', loadingMapEn:'Initializing public basemap', loadingData:'正在读取目击记录', loadingDataEn:'Loading sightings', done:'加载完成', doneEn:'Completed',
-    noLayer:'该年份没有匹配的珠海时间段，或图层尚未成功读取。', failed:'读取失败', features:'个要素', visible:'已置顶显示', emptyGeo:'文件可读取但没有 features', coordFixed:'已自动修正疑似经纬度反置坐标', season:{dry:'枯季', wet:'湿季', all:'全年/综合'}, footer:'© 中华白海豚数据库｜公开底图来自 OpenStreetMap / Esri World Imagery，目击记录来自本站 sighting 目录。',
+    noLayer:'该年份没有匹配的珠海时间段，或图层尚未成功读取。', failed:'读取失败', features:'个要素', season:{dry:'枯季', wet:'湿季', all:'全年/综合'}, footer:'© 中华白海豚数据库｜公开底图来自 OpenStreetMap / Esri World Imagery，目击记录来自本站 sighting 目录。',
     popupLayer:'图层', popupYear:'年份', popupRegion:'水域', popupSeason:'季节', popupProps:'属性'
   },
   en:{
@@ -187,23 +189,21 @@ const I18N = {
     note:'Data paths: sighting/hk/hk_2005.geojson to hk_2025.geojson; sighting/zh/ files are loaded by period and dry/wet season.',
     langBtn:'中文', yearCardTitle:'Year tab', yearHint:'2005–2025', mapTypeTitle:'Basemap type', mapTypeHint:'Public online tiles', admin:'Administrative', satellite:'Satellite remote sensing',
     regionTitle:'Visible waters', regionHint:'Toggle separately', hk:'Hong Kong', zh:'Zhuhai', loadedLayersTitle:'Loaded layers', loadedLayersHint:'Changes by year',
-    mapTitle:'Sighting map', mapSub:'The map uses public online basemaps; sighting GeoJSON is rendered on a top Canvas pane and auto-fitted to the Hong Kong–Zhuhai area.', fit:'Fit study area', reload:'Reload',
+    mapTitle:'Sighting map', mapSub:'The large right-hand card is fixed to the maximum Hong Kong–Zhuhai study extent; GeoJSON polygons/points are overlaid on public online basemaps.', fit:'Fit maximum extent', reload:'Reload',
     legendLabel:'Legend', legendHK:'Hong Kong records', legendZH:'Zhuhai records', legendPoint:'Point sightings', baseAdmin:'Administrative basemap', baseSatellite:'Satellite basemap',
     stats:(year,total,hk,zh)=>`${total} features shown for ${year} | Hong Kong ${hk} | Zhuhai ${zh}`,
     loadingTitle:'Loading', loadingTitleEn:'正在加载', loadingSub:'Loading page and map, please wait…', loadingSubEn:'正在读取页面与地图，请稍候…', preparing:'Preparing…', preparingEn:'准备中', loadingMap:'Initializing public basemap', loadingMapEn:'正在初始化公开底图', loadingData:'Loading sightings', loadingDataEn:'正在读取目击记录', done:'Completed', doneEn:'加载完成',
-    noLayer:'No matching Zhuhai period for this year, or layers have not loaded successfully.', failed:'Failed', features:'features', visible:'shown on top', emptyGeo:'file loaded but contains no features', coordFixed:'auto-fixed likely swapped lat/lon coordinates', season:{dry:'Dry season', wet:'Wet season', all:'All / composite'}, footer:'© Chinese White Dolphin Database | Public basemaps from OpenStreetMap / Esri World Imagery; sighting records from the local sighting directory.',
+    noLayer:'No matching Zhuhai period for this year, or layers have not loaded successfully.', failed:'Failed', features:'features', season:{dry:'Dry season', wet:'Wet season', all:'All / composite'}, footer:'© Chinese White Dolphin Database | Public basemaps from OpenStreetMap / Esri World Imagery; sighting records from the local sighting directory.',
     popupLayer:'Layer', popupYear:'Year', popupRegion:'Waters', popupSeason:'Season', popupProps:'Properties'
   }
 };
 let lang = localStorage.getItem('cwd_lang') || 'zh';
-let currentYear = Number(localStorage.getItem('cwd_year') || 2025);
-if(!YEARS.includes(currentYear)) currentYear = 2025;
+let currentYear = Number(localStorage.getItem('cwd_year') || 2005);
+if(!YEARS.includes(currentYear)) currentYear = 2005;
 let basemapMode = localStorage.getItem('cwd_basemap') || 'admin';
 let showHK = localStorage.getItem('cwd_show_hk') !== '0';
 let showZH = localStorage.getItem('cwd_show_zh') !== '0';
-let map, adminLayer, satelliteLayer, layerGroup, sightingRenderer;
-let renderSeq = 0;
-let sliderTimer = null;
+let map, adminLayer, satelliteLayer, layerGroup;
 const cache = new Map();
 const el = Object.fromEntries(['loadingOverlay','loadingTitle','loadingSub','loadingStatus','loadingPercent','loadingBarFill','titleMain','subMain','loadNote','langBtn','yearCardTitle','yearHint','yearValue','yearSlider','rangeFill','quickYears','mapTypeTitle','mapTypeHint','adminBtn','satBtn','regionTitle','regionHint','hkToggle','zhToggle','loadedLayersTitle','loadedLayersHint','layerList','stats','activeYearPill','fitBtn','reloadBtn','mapTitle','mapSub','baseMapPill','legendLabel','legendHK','legendZH','legendPoint','footerText'].map(id => [id, document.getElementById(id)]));
 function t(){return I18N[lang];}
@@ -220,48 +220,13 @@ function updateLoading(progress, statusKey){
 function hideLoading(){ updateLoading(100,'done'); setTimeout(()=>el.loadingOverlay.classList.add('hidden'), 120); }
 function layerStyle(region, season){
   const isHK = region === 'hk';
-  const color = isHK ? '#0284c7' : '#d97706';
-  const fill = isHK ? '#38bdf8' : '#f59e0b';
-  const dashArray = season === 'wet' ? '8 5' : (season === 'dry' ? null : '3 4');
-  return {
-    pane:'sightingPane', renderer:sightingRenderer,
-    color, weight:4.2, opacity:1,
-    fillColor:fill, fillOpacity:isHK ? .34 : .30,
-    dashArray, lineCap:'round', lineJoin:'round', interactive:true
-  };
+  const color = isHK ? '#0ea5e9' : '#f59e0b';
+  const dashArray = season === 'wet' ? '6 5' : (season === 'dry' ? '1 0' : '3 4');
+  return {color, weight:1.4, opacity:.98, fillColor:color, fillOpacity:isHK?.48:.42, dashArray, interactive:true};
 }
 function pointMarker(feature, latlng, meta){
   const isHK = meta.region === 'hk';
-  return L.circleMarker(latlng, {
-    pane:'sightingPane', renderer:sightingRenderer,
-    radius:7.5, color:isHK?'#075985':'#92400e', weight:2.2,
-    fillColor:isHK?'#38bdf8':'#fbbf24', fillOpacity:.96, opacity:1
-  });
-}
-function walkCoords(coords, cb){
-  if(!Array.isArray(coords)) return;
-  if(typeof coords[0] === 'number' && typeof coords[1] === 'number') cb(coords);
-  else coords.forEach(c => walkCoords(c, cb));
-}
-function cloneAndNormalizeGeoJson(geo){
-  const cloned = JSON.parse(JSON.stringify(geo || {}));
-  let total = 0, swappedLike = 0;
-  (cloned.features || []).forEach(f => walkCoords(f?.geometry?.coordinates, pt => {
-    const x = Number(pt[0]), y = Number(pt[1]);
-    if(!Number.isFinite(x) || !Number.isFinite(y)) return;
-    total += 1;
-    // Normal Hong Kong / Zhuhai lon-lat is roughly [112-116, 20-24].
-    // If the file uses [lat, lon], Leaflet will place features off-map; fix it.
-    if(x >= 20 && x <= 24 && y >= 112 && y <= 116) swappedLike += 1;
-  }));
-  const shouldSwap = total > 0 && swappedLike / total > .6;
-  if(shouldSwap){
-    (cloned.features || []).forEach(f => walkCoords(f?.geometry?.coordinates, pt => {
-      const tmp = pt[0]; pt[0] = pt[1]; pt[1] = tmp;
-    }));
-  }
-  cloned.__coordFixed = shouldSwap;
-  return cloned;
+  return L.circleMarker(latlng, {radius:5.5, color:isHK?'#0284c7':'#d97706', weight:1.5, fillColor:isHK?'#38bdf8':'#fbbf24', fillOpacity:.85});
 }
 function propsTable(props){
   const entries = Object.entries(props || {}).filter(([k,v]) => v !== null && v !== undefined && String(v).trim() !== '').slice(0, 24);
@@ -276,11 +241,20 @@ function bindPopup(feature, layer, meta){
 function countFeatures(geo){return Array.isArray(geo?.features) ? geo.features.length : 0;}
 async function fetchGeoJson(path){
   if(cache.has(path)) return cache.get(path);
-  const res = await fetch(path, {cache:'no-store'});
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  const geo = await res.json();
-  cache.set(path, geo);
-  return geo;
+  const candidates = [path];
+  const base = String(path).split('/').pop();
+  if(base && base !== path) candidates.push(`./${base}`); // 便于本地只放单个 geojson 测试
+  let lastError = null;
+  for(const p of candidates){
+    try{
+      const res = await fetch(p, {cache:'no-store'});
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const geo = await res.json();
+      cache.set(path, geo);
+      return geo;
+    }catch(err){ lastError = err; }
+  }
+  throw lastError || new Error('Fetch failed');
 }
 function zhFilesForYear(year){return ZH_PERIODS.filter(p => year >= p.start && year <= p.end);}
 function filesForYear(year){
@@ -310,107 +284,79 @@ function renderYearControls(){
   el.quickYears.querySelectorAll('[data-year]').forEach(btn => btn.addEventListener('click', () => {currentYear=Number(btn.dataset.year); localStorage.setItem('cwd_year', currentYear); renderAll();}));
 }
 function initMap(){
-  adminLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom:19, keepBuffer:6, updateWhenIdle:true, updateWhenZooming:false,
-    attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
-  });
-  satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom:19, keepBuffer:6, updateWhenIdle:true, updateWhenZooming:false,
-    attribution:'Tiles &copy; Esri'
-  });
-  map = L.map('map', {
-    center:BAS_CENTER, zoom:10, layers:[basemapMode === 'satellite' ? satelliteLayer : adminLayer],
-    zoomControl:true, scrollWheelZoom:true, preferCanvas:true, zoomSnap:.25, zoomDelta:.5,
-    fadeAnimation:false, zoomAnimation:true, markerZoomAnimation:false, inertia:true
-  });
-  map.createPane('sightingPane');
-  map.getPane('sightingPane').style.zIndex = 650;
-  sightingRenderer = L.canvas({pane:'sightingPane', padding:.5});
-  map.setMaxBounds(L.latLngBounds([20.8,111.5],[23.8,116.2]));
+  adminLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {maxZoom:19, updateWhenIdle:true, keepBuffer:4, attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+  satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, updateWhenIdle:true, keepBuffer:4, attribution:'Tiles &copy; Esri'});
+  map = L.map('map', {center:BAS_CENTER, zoom:9, layers:[basemapMode === 'satellite' ? satelliteLayer : adminLayer], zoomControl:true, scrollWheelZoom:true, preferCanvas:true, zoomAnimation:false, fadeAnimation:false, markerZoomAnimation:false});
+  map.setMaxBounds(L.latLngBounds([20.8,111.3],[23.8,116.2]));
+  map.fitBounds(MAX_STUDY_BOUNDS, {animate:false});
   layerGroup = L.featureGroup().addTo(map);
-  map.fitBounds(BAS_BOUNDS, {animate:false});
 }
 function switchBasemap(){
   if(!map) return;
   map.removeLayer(adminLayer); map.removeLayer(satelliteLayer);
   (basemapMode === 'satellite' ? satelliteLayer : adminLayer).addTo(map);
 }
-async function renderLayers(seq = ++renderSeq){
+async function renderLayers(){
   updateLoading(20,'loadingData');
   layerGroup.clearLayers();
   const metas = filesForYear(currentYear);
   const loaded = [];
   let hkCount = 0, zhCount = 0;
-  const bounds = L.latLngBounds();
   for(let i=0; i<metas.length; i++){
-    if(seq !== renderSeq) return;
     const meta = metas[i];
     try{
       updateLoading(24 + (i / Math.max(1,metas.length)) * 56, 'loadingData');
-      const rawGeo = await fetchGeoJson(meta.path);
-      const geo = cloneAndNormalizeGeoJson(rawGeo);
+      const geo = await fetchGeoJson(meta.path);
       const n = countFeatures(geo);
       if(meta.region === 'hk') hkCount += n; else zhCount += n;
-      if(n === 0){
-        loaded.push({...meta, ok:false, error:t().emptyGeo, count:0});
-        continue;
-      }
       const layer = L.geoJSON(geo, {
-        renderer:sightingRenderer, pane:'sightingPane', bubblingMouseEvents:false,
         style: () => layerStyle(meta.region, meta.season),
         pointToLayer: (feature, latlng) => pointMarker(feature, latlng, meta),
         onEachFeature: (feature, lyr) => bindPopup(feature, lyr, meta)
       });
       layer.addTo(layerGroup);
-      try{ bounds.extend(layer.getBounds()); }catch(e){}
-      loaded.push({...meta, ok:true, count:n, coordFixed:!!geo.__coordFixed});
+      loaded.push({...meta, ok:true, count:n});
     }catch(err){
       loaded.push({...meta, ok:false, error:String(err.message || err), count:0});
     }
   }
-  if(seq !== renderSeq) return;
   el.stats.textContent = t().stats(currentYear, hkCount + zhCount, hkCount, zhCount);
   renderLayerList(loaded);
   updateLoading(88,'loadingData');
-  if(bounds.isValid()){
-    map.fitBounds(bounds.pad(.18), {maxZoom:14, animate:false});
-    layerGroup.bringToFront();
-  }else{
-    map.fitBounds(BAS_BOUNDS, {animate:false});
-  }
+  // 不再按单年/单文件图层自动缩到很小的局部范围；始终保持最大研究区视野。
+  map.fitBounds(MAX_STUDY_BOUNDS, {animate:false});
+  layerGroup.bringToFront();
   hideLoading();
 }
 function renderLayerList(items){
   if(!items.length){ el.layerList.innerHTML = `<div class="empty">${esc(t().noLayer)}</div>`; return; }
   el.layerList.innerHTML = items.map(item => {
     const color = item.region === 'hk' ? '#0ea5e9' : '#f59e0b';
-    const status = item.ok ? `${item.count} ${t().features}｜${t().visible}` : `${t().failed}: ${item.error}`;
-    const fixed = item.coordFixed ? `<br><span class="muted">${esc(t().coordFixed)}</span>` : '';
-    return `<div class="layerItem"><div class="layerTop"><span class="layerName"><span class="swatch" style="background:${color}"></span>${esc(item.label)}</span><span class="pill">${esc(status)}</span></div><div class="layerMeta">${esc(item.file)}<br>${esc(item.path)}${fixed}</div></div>`;
+    const status = item.ok ? `${item.count} ${t().features}` : `${t().failed}: ${item.error}`;
+    return `<div class="layerItem"><div class="layerTop"><span class="layerName"><span class="swatch" style="background:${color}"></span>${esc(item.label)}</span><span class="pill">${esc(status)}</span></div><div class="layerMeta">${esc(item.file)}<br>${esc(item.path)}</div></div>`;
   }).join('');
 }
 function renderAll(){
-  renderSeq += 1;
-  const seq = renderSeq;
   renderStaticTexts(); renderYearControls(); switchBasemap();
   el.loadingOverlay.classList.remove('hidden');
   updateLoading(12,'loadingData');
-  renderLayers(seq);
-}
-function scheduleYearRender(){
-  renderStaticTexts(); renderYearControls();
-  clearTimeout(sliderTimer);
-  sliderTimer = setTimeout(() => renderAll(), 160);
+  renderLayers();
 }
 function bindEvents(){
   el.langBtn.addEventListener('click', () => {lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('cwd_lang', lang); renderAll();});
-  el.yearSlider.addEventListener('input', () => {currentYear = Number(el.yearSlider.value); localStorage.setItem('cwd_year', currentYear); scheduleYearRender();});
-  el.yearSlider.addEventListener('change', () => renderAll());
+  let yearRenderTimer = null;
+  el.yearSlider.addEventListener('input', () => {
+    currentYear = Number(el.yearSlider.value);
+    localStorage.setItem('cwd_year', currentYear);
+    renderStaticTexts(); renderYearControls();
+    clearTimeout(yearRenderTimer);
+    yearRenderTimer = setTimeout(() => renderAll(), 180);
+  });
   el.adminBtn.addEventListener('click', () => {basemapMode='admin'; localStorage.setItem('cwd_basemap', basemapMode); renderAll();});
   el.satBtn.addEventListener('click', () => {basemapMode='satellite'; localStorage.setItem('cwd_basemap', basemapMode); renderAll();});
   el.hkToggle.addEventListener('click', () => {showHK=!showHK; localStorage.setItem('cwd_show_hk', showHK?'1':'0'); renderAll();});
   el.zhToggle.addEventListener('click', () => {showZH=!showZH; localStorage.setItem('cwd_show_zh', showZH?'1':'0'); renderAll();});
-  el.fitBtn.addEventListener('click', () => { if(layerGroup.getLayers().length) map.fitBounds(layerGroup.getBounds().pad(.18), {maxZoom:14, animate:false}); else map.fitBounds(BAS_BOUNDS, {animate:false}); });
+  el.fitBtn.addEventListener('click', () => { map.fitBounds(MAX_STUDY_BOUNDS, {animate:false}); });
   el.reloadBtn.addEventListener('click', () => {cache.clear(); renderAll();});
 }
 (function main(){
