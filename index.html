@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>中华白海豚数据库</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQfRZ9ccNTShUN1h2ATZK7+5q6E3oY=" crossorigin="" />
+<style>
+:root{
+  --bg:#f4fbff; --card:#ffffff; --line:#d7e5ef; --muted:#5b7285; --text:#10212f;
+  --blue:#0ea5e9; --blue-2:#38bdf8; --blue-3:#7dd3fc; --blue-4:#dff4ff; --chip:#eef8ff;
+  --green:#10b981; --orange:#f59e0b; --red:#ef4444;
+  --shadow:0 10px 28px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--text);
+  font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(14,165,233,.18), transparent 55%),
+    radial-gradient(1000px 600px at 100% 0%, rgba(2,132,199,.10), transparent 50%),
+    var(--bg);
+  overflow-x:hidden;
+}
+.wrap{max-width:1500px; margin:0 auto; padding:20px 16px 28px; min-height:100vh;}
+.head,.sidebar,.main,.pageFooter{
+  background:rgba(255,255,255,.88); border:1px solid var(--line); border-radius:18px;
+  backdrop-filter:blur(8px); box-shadow:var(--shadow);
+}
+.head{padding:18px 18px 14px; margin-bottom:14px;}
+.headTop{display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
+h1{margin:0 0 6px; font-size:28px}
+.sub{margin:0; color:var(--muted)}
+.note{margin:8px 0 0; color:var(--muted); font-size:12px}
+.layout{display:grid; grid-template-columns:320px 1fr; gap:14px; align-items:start; min-height:calc(100vh - 160px);}
+@media (max-width:980px){.layout{grid-template-columns:1fr; min-height:auto}.headTop{flex-direction:column}.sidebar,.main{max-height:none; overflow:visible}.pageFooter{margin-top:14px}}
+.sidebar,.main{min-height:0;}
+.sidebar{padding:14px; position:sticky; top:12px; max-height:calc(100vh - 24px); overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable;}
+.main{padding:14px; max-height:calc(100vh - 24px); overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable;}
+.pageFooter{padding:12px 14px; margin-top:14px; color:var(--muted); font-size:12px; text-align:center; display:flex; align-items:center; justify-content:center;}
+button,select,input[type=range]{font:inherit}
+button,select{border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--text); padding:10px 12px; cursor:pointer;}
+button:hover,select:hover{border-color:#b9d6e6; background:#fcfeff}.langBtn{white-space:nowrap; font-weight:700;}
+.controls{display:grid; gap:12px}.controlCard{border:1px solid var(--line); border-radius:14px; padding:12px; background:#fbfeff;}
+.controlTitle{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; color:var(--muted); font-size:12px;}
+.controlTitle strong{color:var(--text); font-size:14px}.pill{display:inline-block; padding:4px 8px; border-radius:999px; background:var(--chip); border:1px solid #d6efff; color:#065f8f; font-size:12px;}
+.yearValue{font-size:32px; line-height:1; font-weight:900; color:#075985; margin:8px 0 10px; letter-spacing:.5px;}
+.rangeWrap{position:relative; height:34px; margin-top:6px}.track,.fill{position:absolute; left:0; right:0; top:50%; height:5px; transform:translateY(-50%); border-radius:999px}.track{background:#e4eef4}.fill{background:linear-gradient(90deg,rgba(14,165,233,.25),rgba(14,165,233,.85)); right:auto; width:0%}
+.rangeWrap input[type=range]{position:absolute; inset:0; width:100%; margin:0; appearance:none; background:none}.rangeWrap input::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:var(--blue); border:2px solid #fff; box-shadow:0 0 0 1px rgba(14,165,233,.35)}.rangeWrap input::-moz-range-thumb{width:18px; height:18px; border:none; border-radius:50%; background:var(--blue)}
+.yearTicks{display:flex; justify-content:space-between; color:var(--muted); font-size:11px; margin-top:2px}.quickYears{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}.quickYear{padding:5px 8px; border-radius:999px; font-size:12px}.quickYear.active{background:var(--blue-4); border-color:#bae6fd; color:#075985; font-weight:800}
+.tabGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px}.tabBtn{display:flex; align-items:center; justify-content:center; min-height:52px; font-weight:800; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(241,249,255,.95))}.tabBtn.active{border-color:rgba(14,165,233,.45); box-shadow:0 10px 24px rgba(14,165,233,.12); background:linear-gradient(180deg,rgba(235,248,255,.98),rgba(225,244,255,.98)); color:#075985}
+.layerList{display:grid; gap:8px}.layerItem{border:1px solid #e5eef5; border-radius:12px; padding:10px; background:#fff}.layerTop{display:flex; justify-content:space-between; gap:8px; align-items:center}.layerName{font-weight:800}.layerMeta{margin-top:4px; color:var(--muted); font-size:12px; word-break:break-all}.swatch{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px}.muted{color:var(--muted)}
+.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:12px}.toolbarLeft,.toolbarRight{display:flex; gap:8px; flex-wrap:wrap; align-items:center}.stats{color:var(--muted); font-size:13px;}
+.section{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.9); box-shadow:0 6px 18px rgba(15,23,42,.04); overflow:hidden}.section + .section{margin-top:12px}.sectionHead{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 16px 10px}.sectionTitle{margin:0; font-size:16px; font-weight:800}.sectionSub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+.mapPanel{padding:0 14px 14px}.mapCanvasWrap{border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(249,253,255,.98),rgba(240,248,255,.92)); min-height:650px; position:relative; overflow:hidden}#map{width:100%; height:650px; z-index:1}.leaflet-container{font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#dff4ff}.leaflet-popup-content-wrapper{border-radius:14px}.popupTitle{font-weight:900; margin-bottom:6px}.popupRow{color:#5b7285; margin-top:3px}.popupProps{max-height:180px; overflow:auto; border-top:1px solid #edf4f8; margin-top:8px; padding-top:6px}.popupProps table{border-collapse:collapse; width:100%}.popupProps td{border-bottom:1px solid #f0f5f8; padding:3px 4px; vertical-align:top}.popupProps td:first-child{font-weight:700; color:#335b70; width:38%}
+.legend{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:12px 0 0; color:var(--muted); font-size:12px}.legendItem{display:inline-flex; align-items:center; gap:6px}.legendLine{display:inline-block; width:24px; height:0; border-top:4px solid currentColor; border-radius:999px}.empty{border:1px dashed var(--line); border-radius:16px; padding:28px 16px; text-align:center; color:var(--muted); background:#fbfeff}.hidden{display:none !important}
+.loadingOverlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(900px 500px at 10% -10%, rgba(14,165,233,.18), transparent 55%), radial-gradient(1000px 600px at 100% 0%, rgba(2,132,199,.10), transparent 50%), rgba(244,251,255,.96); backdrop-filter:blur(10px); opacity:1; visibility:visible; transition:opacity .5s ease, visibility .5s ease}.loadingOverlay.hidden{opacity:0; visibility:hidden; pointer-events:none}.loadingPanel{width:min(520px,92vw); background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:22px; box-shadow:0 18px 48px rgba(15,23,42,.10); padding:26px 24px 22px}.loadingTitle{margin:0 0 8px; font-size:22px; font-weight:800}.loadingSub{margin:0 0 16px; color:var(--muted); font-size:14px; line-height:1.6}.loadingBar{position:relative; width:100%; height:12px; border-radius:999px; overflow:hidden; background:#e4eef4; border:1px solid #d7e5ef}.loadingBarFill{width:0%; height:100%; border-radius:999px; background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98)); transition:width .35s ease}.loadingMeta{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; color:var(--muted); font-size:13px}.loadingPercent{color:var(--text); font-weight:800; font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="loadingOverlay" id="loadingOverlay" aria-live="polite">
+  <div class="loadingPanel">
+    <h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2>
+    <p class="loadingSub" id="loadingSub">正在读取页面与地图，请稍候… / Loading page and map, please wait…</p>
+    <div class="loadingBar" aria-hidden="true"><div class="loadingBarFill" id="loadingBarFill"></div></div>
+    <div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="headTop">
+      <div>
+        <h1 id="titleMain">中华白海豚数据库</h1>
+        <p class="sub" id="subMain"></p>
+        <p class="note" id="loadNote"></p>
+      </div>
+      <button id="langBtn" class="langBtn" type="button">English</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="controls">
+        <section class="controlCard">
+          <div class="controlTitle"><strong id="yearCardTitle"></strong><span id="yearHint"></span></div>
+          <div class="yearValue" id="yearValue">2025</div>
+          <div class="rangeWrap">
+            <div class="track"></div>
+            <div class="fill" id="rangeFill"></div>
+            <input id="yearSlider" type="range" min="2005" max="2025" step="1" value="2025" />
+          </div>
+          <div class="yearTicks"><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2025</span></div>
+          <div class="quickYears" id="quickYears"></div>
+        </section>
+
+        <section class="controlCard">
+          <div class="controlTitle"><strong id="mapTypeTitle"></strong><span id="mapTypeHint"></span></div>
+          <div class="tabGrid">
+            <button id="adminBtn" class="tabBtn" type="button"></button>
+            <button id="satBtn" class="tabBtn" type="button"></button>
+          </div>
+        </section>
+
+        <section class="controlCard">
+          <div class="controlTitle"><strong id="regionTitle"></strong><span id="regionHint"></span></div>
+          <div class="tabGrid">
+            <button id="hkToggle" class="tabBtn active" type="button"></button>
+            <button id="zhToggle" class="tabBtn active" type="button"></button>
+          </div>
+        </section>
+
+        <section class="controlCard">
+          <div class="controlTitle"><strong id="loadedLayersTitle"></strong><span id="loadedLayersHint"></span></div>
+          <div class="layerList" id="layerList"></div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <div class="toolbarLeft">
+          <div class="stats" id="stats">—</div>
+          <span class="pill" id="activeYearPill">2025</span>
+        </div>
+        <div class="toolbarRight">
+          <button id="fitBtn" type="button"></button>
+          <button id="reloadBtn" type="button"></button>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="sectionHead">
+          <div>
+            <h2 class="sectionTitle" id="mapTitle"></h2>
+            <p class="sectionSub" id="mapSub"></p>
+          </div>
+          <div class="tabActions"><span class="pill" id="baseMapPill"></span></div>
+        </div>
+        <div class="mapPanel">
+          <div class="mapCanvasWrap"><div id="map"></div></div>
+          <div class="legend">
+            <span id="legendLabel"></span>
+            <span class="legendItem" style="color:#0ea5e9"><span class="legendLine"></span><span id="legendHK"></span></span>
+            <span class="legendItem" style="color:#f59e0b"><span class="legendLine"></span><span id="legendZH"></span></span>
+            <span class="legendItem"><span class="swatch" style="background:#0ea5e9"></span><span id="legendPoint"></span></span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="pageFooter" id="footerText"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const YEARS = Array.from({length:21}, (_, i) => 2005 + i);
+const HK_DIR = './sighting/hk/';
+const ZH_DIR = './sighting/zh/';
+const HK_FILES = Object.fromEntries(YEARS.map(y => [y, `${HK_DIR}hk_${y}.geojson`]));
+const ZH_PERIODS = [
+  { id:'zh_2005_2008_dry', start:2005, end:2008, season:'dry', path:`${ZH_DIR}zh_2005-2008_dry.geojson` },
+  { id:'zh_2005_2008_wet', start:2005, end:2008, season:'wet', path:`${ZH_DIR}zh_2005-2008_wet.geojson` },
+  { id:'zh_2015_2021', start:2015, end:2021, season:'all', path:`${ZH_DIR}zh_2015-2021.geojson` },
+  { id:'zh_2019_2023_dry', start:2019, end:2023, season:'dry', path:`${ZH_DIR}zh_2019-2023_dry.geojson` },
+  { id:'zh_2019_2023_wet', start:2019, end:2023, season:'wet', path:`${ZH_DIR}zh_2019-2023_wet.geojson` }
+];
+const BAS_CENTER = [22.28, 113.72];
+const BAS_BOUNDS = L.latLngBounds([21.7,112.55],[22.95,115.0]);
+const I18N = {
+  zh:{
+    title:'中华白海豚数据库',
+    sub:'按年份加载香港与珠海水域中华白海豚目击记录，并叠加到公开底图上。',
+    note:'数据路径：sighting/hk/hk_2005.geojson 至 hk_2025.geojson；sighting/zh/ 下按时间段与枯/湿季加载。',
+    langBtn:'English', yearCardTitle:'年份选项卡', yearHint:'2005–2025', mapTypeTitle:'底图类型', mapTypeHint:'公开在线底图', admin:'行政区', satellite:'卫星遥感',
+    regionTitle:'显示水域', regionHint:'可单独开关', hk:'香港', zh:'珠海', loadedLayersTitle:'当前加载图层', loadedLayersHint:'随年份变化',
+    mapTitle:'目击记录地图', mapSub:'右侧大卡片使用 Leaflet 直接调用公开在线底图，不依赖本地行政区 JSON。', fit:'回到研究区', reload:'重新加载',
+    legendLabel:'图例', legendHK:'香港记录', legendZH:'珠海记录', legendPoint:'点状目击记录', baseAdmin:'行政区底图', baseSatellite:'卫星遥感底图',
+    stats:(year,total,hk,zh)=>`${year} 年当前显示 ${total} 个要素｜香港 ${hk}｜珠海 ${zh}`,
+    loadingTitle:'正在加载', loadingTitleEn:'Loading', loadingSub:'正在读取页面与地图，请稍候…', loadingSubEn:'Loading page and map, please wait…', preparing:'准备中', preparingEn:'Preparing…', loadingMap:'正在初始化公开底图', loadingMapEn:'Initializing public basemap', loadingData:'正在读取目击记录', loadingDataEn:'Loading sightings', done:'加载完成', doneEn:'Completed',
+    noLayer:'该年份没有匹配的珠海时间段，或图层尚未成功读取。', failed:'读取失败', features:'个要素', season:{dry:'枯季', wet:'湿季', all:'全年/综合'}, footer:'© 中华白海豚数据库｜公开底图来自 OpenStreetMap / Esri World Imagery，目击记录来自本站 sighting 目录。',
+    popupLayer:'图层', popupYear:'年份', popupRegion:'水域', popupSeason:'季节', popupProps:'属性'
+  },
+  en:{
+    title:'Chinese White Dolphin Database',
+    sub:'Load Chinese white dolphin sighting records for Hong Kong and Zhuhai waters by year, over public online basemaps.',
+    note:'Data paths: sighting/hk/hk_2005.geojson to hk_2025.geojson; sighting/zh/ files are loaded by period and dry/wet season.',
+    langBtn:'中文', yearCardTitle:'Year tab', yearHint:'2005–2025', mapTypeTitle:'Basemap type', mapTypeHint:'Public online tiles', admin:'Administrative', satellite:'Satellite remote sensing',
+    regionTitle:'Visible waters', regionHint:'Toggle separately', hk:'Hong Kong', zh:'Zhuhai', loadedLayersTitle:'Loaded layers', loadedLayersHint:'Changes by year',
+    mapTitle:'Sighting map', mapSub:'The large right-hand card uses Leaflet public online basemaps and does not depend on local administrative GeoJSON.', fit:'Fit study area', reload:'Reload',
+    legendLabel:'Legend', legendHK:'Hong Kong records', legendZH:'Zhuhai records', legendPoint:'Point sightings', baseAdmin:'Administrative basemap', baseSatellite:'Satellite basemap',
+    stats:(year,total,hk,zh)=>`${total} features shown for ${year} | Hong Kong ${hk} | Zhuhai ${zh}`,
+    loadingTitle:'Loading', loadingTitleEn:'正在加载', loadingSub:'Loading page and map, please wait…', loadingSubEn:'正在读取页面与地图，请稍候…', preparing:'Preparing…', preparingEn:'准备中', loadingMap:'Initializing public basemap', loadingMapEn:'正在初始化公开底图', loadingData:'Loading sightings', loadingDataEn:'正在读取目击记录', done:'Completed', doneEn:'加载完成',
+    noLayer:'No matching Zhuhai period for this year, or layers have not loaded successfully.', failed:'Failed', features:'features', season:{dry:'Dry season', wet:'Wet season', all:'All / composite'}, footer:'© Chinese White Dolphin Database | Public basemaps from OpenStreetMap / Esri World Imagery; sighting records from the local sighting directory.',
+    popupLayer:'Layer', popupYear:'Year', popupRegion:'Waters', popupSeason:'Season', popupProps:'Properties'
+  }
+};
+let lang = localStorage.getItem('cwd_lang') || 'zh';
+let currentYear = Number(localStorage.getItem('cwd_year') || 2025);
+if(!YEARS.includes(currentYear)) currentYear = 2025;
+let basemapMode = localStorage.getItem('cwd_basemap') || 'admin';
+let showHK = localStorage.getItem('cwd_show_hk') !== '0';
+let showZH = localStorage.getItem('cwd_show_zh') !== '0';
+let map, adminLayer, satelliteLayer, layerGroup;
+const cache = new Map();
+const el = Object.fromEntries(['loadingOverlay','loadingTitle','loadingSub','loadingStatus','loadingPercent','loadingBarFill','titleMain','subMain','loadNote','langBtn','yearCardTitle','yearHint','yearValue','yearSlider','rangeFill','quickYears','mapTypeTitle','mapTypeHint','adminBtn','satBtn','regionTitle','regionHint','hkToggle','zhToggle','loadedLayersTitle','loadedLayersHint','layerList','stats','activeYearPill','fitBtn','reloadBtn','mapTitle','mapSub','baseMapPill','legendLabel','legendHK','legendZH','legendPoint','footerText'].map(id => [id, document.getElementById(id)]));
+function t(){return I18N[lang];}
+function esc(s){return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function updateLoading(progress, statusKey){
+  const p = Math.max(0, Math.min(100, Number(progress)||0));
+  el.loadingPercent.textContent = `${p.toFixed(2)}%`;
+  el.loadingBarFill.style.width = `${p}%`;
+  el.loadingTitle.textContent = `${t().loadingTitle} / ${t().loadingTitleEn}`;
+  el.loadingSub.textContent = `${t().loadingSub} / ${t().loadingSubEn}`;
+  const a = t()[statusKey] || ''; const b = t()[`${statusKey}En`] || '';
+  if(statusKey) el.loadingStatus.textContent = b ? `${a} / ${b}` : a;
+}
+function hideLoading(){ updateLoading(100,'done'); setTimeout(()=>el.loadingOverlay.classList.add('hidden'), 120); }
+function layerStyle(region, season){
+  const isHK = region === 'hk';
+  const color = isHK ? '#0ea5e9' : '#f59e0b';
+  const dashArray = season === 'wet' ? '6 5' : (season === 'dry' ? '1 0' : '3 4');
+  return {color, weight:2.4, opacity:.92, fillColor:color, fillOpacity: isHK ? .18 : .14, dashArray};
+}
+function pointMarker(feature, latlng, meta){
+  const isHK = meta.region === 'hk';
+  return L.circleMarker(latlng, {radius:5.5, color:isHK?'#0284c7':'#d97706', weight:1.5, fillColor:isHK?'#38bdf8':'#fbbf24', fillOpacity:.85});
+}
+function propsTable(props){
+  const entries = Object.entries(props || {}).filter(([k,v]) => v !== null && v !== undefined && String(v).trim() !== '').slice(0, 24);
+  if(!entries.length) return '';
+  return `<div class="popupProps"><b>${esc(t().popupProps)}</b><table>${entries.map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(typeof v === 'object' ? JSON.stringify(v) : v)}</td></tr>`).join('')}</table></div>`;
+}
+function bindPopup(feature, layer, meta){
+  const props = feature.properties || {};
+  const title = props.name || props.title || props.id || props.ID || meta.label;
+  layer.bindPopup(`<div class="popupTitle">${esc(title)}</div><div class="popupRow"><b>${esc(t().popupRegion)}:</b> ${esc(meta.regionLabel)}</div><div class="popupRow"><b>${esc(t().popupYear)}:</b> ${esc(currentYear)}</div><div class="popupRow"><b>${esc(t().popupLayer)}:</b> ${esc(meta.file)}</div>${meta.season ? `<div class="popupRow"><b>${esc(t().popupSeason)}:</b> ${esc(t().season[meta.season] || meta.season)}</div>` : ''}${propsTable(props)}`);
+}
+function countFeatures(geo){return Array.isArray(geo?.features) ? geo.features.length : 0;}
+async function fetchGeoJson(path){
+  if(cache.has(path)) return cache.get(path);
+  const res = await fetch(path, {cache:'no-store'});
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const geo = await res.json();
+  cache.set(path, geo);
+  return geo;
+}
+function zhFilesForYear(year){return ZH_PERIODS.filter(p => year >= p.start && year <= p.end);}
+function filesForYear(year){
+  const files = [];
+  if(showHK) files.push({region:'hk', regionLabel:t().hk, season:'all', file:`hk_${year}.geojson`, path:HK_FILES[year], label:`${t().hk} ${year}`});
+  if(showZH) zhFilesForYear(year).forEach(p => files.push({region:'zh', regionLabel:t().zh, season:p.season, file:p.path.split('/').pop(), path:p.path, label:`${t().zh} ${p.start}-${p.end} ${t().season[p.season]||p.season}`}));
+  return files;
+}
+function renderStaticTexts(){
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = t().title;
+  el.titleMain.textContent = t().title; el.subMain.textContent = t().sub; el.loadNote.textContent = t().note; el.langBtn.textContent = t().langBtn;
+  el.yearCardTitle.textContent = t().yearCardTitle; el.yearHint.textContent = t().yearHint; el.mapTypeTitle.textContent = t().mapTypeTitle; el.mapTypeHint.textContent = t().mapTypeHint;
+  el.adminBtn.textContent = t().admin; el.satBtn.textContent = t().satellite; el.regionTitle.textContent = t().regionTitle; el.regionHint.textContent = t().regionHint;
+  el.hkToggle.textContent = t().hk; el.zhToggle.textContent = t().zh; el.loadedLayersTitle.textContent = t().loadedLayersTitle; el.loadedLayersHint.textContent = t().loadedLayersHint;
+  el.fitBtn.textContent = t().fit; el.reloadBtn.textContent = t().reload; el.mapTitle.textContent = t().mapTitle; el.mapSub.textContent = t().mapSub;
+  el.legendLabel.textContent = t().legendLabel; el.legendHK.textContent = t().legendHK; el.legendZH.textContent = t().legendZH; el.legendPoint.textContent = t().legendPoint;
+  el.footerText.textContent = t().footer;
+  el.baseMapPill.textContent = basemapMode === 'satellite' ? t().baseSatellite : t().baseAdmin;
+  el.adminBtn.classList.toggle('active', basemapMode === 'admin'); el.satBtn.classList.toggle('active', basemapMode === 'satellite');
+  el.hkToggle.classList.toggle('active', showHK); el.zhToggle.classList.toggle('active', showZH);
+}
+function renderYearControls(){
+  el.yearSlider.value = currentYear; el.yearValue.textContent = currentYear; el.activeYearPill.textContent = currentYear;
+  el.rangeFill.style.width = `${((currentYear-2005)/(2025-2005))*100}%`;
+  el.quickYears.innerHTML = [2005,2008,2015,2019,2021,2023,2025].map(y => `<button class="quickYear ${y===currentYear?'active':''}" type="button" data-year="${y}">${y}</button>`).join('');
+  el.quickYears.querySelectorAll('[data-year]').forEach(btn => btn.addEventListener('click', () => {currentYear=Number(btn.dataset.year); localStorage.setItem('cwd_year', currentYear); renderAll();}));
+}
+function initMap(){
+  adminLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'});
+  satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Tiles &copy; Esri'});
+  map = L.map('map', {center:BAS_CENTER, zoom:10, layers:[basemapMode === 'satellite' ? satelliteLayer : adminLayer], zoomControl:true, scrollWheelZoom:true});
+  map.setMaxBounds(L.latLngBounds([20.8,111.5],[23.8,116.2]));
+  layerGroup = L.featureGroup().addTo(map);
+}
+function switchBasemap(){
+  if(!map) return;
+  map.removeLayer(adminLayer); map.removeLayer(satelliteLayer);
+  (basemapMode === 'satellite' ? satelliteLayer : adminLayer).addTo(map);
+}
+async function renderLayers(){
+  updateLoading(20,'loadingData');
+  layerGroup.clearLayers();
+  const metas = filesForYear(currentYear);
+  const loaded = [];
+  let hkCount = 0, zhCount = 0;
+  for(let i=0; i<metas.length; i++){
+    const meta = metas[i];
+    try{
+      updateLoading(24 + (i / Math.max(1,metas.length)) * 56, 'loadingData');
+      const geo = await fetchGeoJson(meta.path);
+      const n = countFeatures(geo);
+      if(meta.region === 'hk') hkCount += n; else zhCount += n;
+      const layer = L.geoJSON(geo, {
+        style: () => layerStyle(meta.region, meta.season),
+        pointToLayer: (feature, latlng) => pointMarker(feature, latlng, meta),
+        onEachFeature: (feature, lyr) => bindPopup(feature, lyr, meta)
+      });
+      layer.addTo(layerGroup);
+      loaded.push({...meta, ok:true, count:n});
+    }catch(err){
+      loaded.push({...meta, ok:false, error:String(err.message || err), count:0});
+    }
+  }
+  el.stats.textContent = t().stats(currentYear, hkCount + zhCount, hkCount, zhCount);
+  renderLayerList(loaded);
+  updateLoading(88,'loadingData');
+  if(layerGroup.getLayers().length){
+    try{ map.fitBounds(layerGroup.getBounds().pad(.12), {maxZoom:13}); }catch(e){ map.fitBounds(BAS_BOUNDS); }
+  }else{ map.fitBounds(BAS_BOUNDS); }
+  hideLoading();
+}
+function renderLayerList(items){
+  if(!items.length){ el.layerList.innerHTML = `<div class="empty">${esc(t().noLayer)}</div>`; return; }
+  el.layerList.innerHTML = items.map(item => {
+    const color = item.region === 'hk' ? '#0ea5e9' : '#f59e0b';
+    const status = item.ok ? `${item.count} ${t().features}` : `${t().failed}: ${item.error}`;
+    return `<div class="layerItem"><div class="layerTop"><span class="layerName"><span class="swatch" style="background:${color}"></span>${esc(item.label)}</span><span class="pill">${esc(status)}</span></div><div class="layerMeta">${esc(item.file)}<br>${esc(item.path)}</div></div>`;
+  }).join('');
+}
+function renderAll(){
+  renderStaticTexts(); renderYearControls(); switchBasemap();
+  el.loadingOverlay.classList.remove('hidden');
+  updateLoading(12,'loadingData');
+  renderLayers();
+}
+function bindEvents(){
+  el.langBtn.addEventListener('click', () => {lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('cwd_lang', lang); renderAll();});
+  el.yearSlider.addEventListener('input', () => {currentYear = Number(el.yearSlider.value); localStorage.setItem('cwd_year', currentYear); renderAll();});
+  el.adminBtn.addEventListener('click', () => {basemapMode='admin'; localStorage.setItem('cwd_basemap', basemapMode); renderAll();});
+  el.satBtn.addEventListener('click', () => {basemapMode='satellite'; localStorage.setItem('cwd_basemap', basemapMode); renderAll();});
+  el.hkToggle.addEventListener('click', () => {showHK=!showHK; localStorage.setItem('cwd_show_hk', showHK?'1':'0'); renderAll();});
+  el.zhToggle.addEventListener('click', () => {showZH=!showZH; localStorage.setItem('cwd_show_zh', showZH?'1':'0'); renderAll();});
+  el.fitBtn.addEventListener('click', () => { if(layerGroup.getLayers().length) map.fitBounds(layerGroup.getBounds().pad(.12), {maxZoom:13}); else map.fitBounds(BAS_BOUNDS); });
+  el.reloadBtn.addEventListener('click', () => {cache.clear(); renderAll();});
+}
+(function main(){
+  updateLoading(2,'preparing');
+  renderStaticTexts(); renderYearControls();
+  updateLoading(12,'loadingMap');
+  initMap(); bindEvents();
+  renderAll();
+})();
+</script>
+</body>
+</html>
