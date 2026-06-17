@@ -245,24 +245,98 @@ function drawMacauAdminBoundary(ctx,proj){
 }
 
 
-function drawPRDReserveBoundary(ctx,proj){
-  if(!Array.isArray(PRD_CWD_RESERVE_BOUNDARY)||PRD_CWD_RESERVE_BOUNDARY.length<2)return;
-  ctx.save();
-  ctx.strokeStyle='rgba(139,92,246,.98)';
-  ctx.lineWidth=Math.max(1.6,Math.min(3.4,1.7*view.scale));
-  ctx.setLineDash([]);
-  ctx.lineJoin='round';
-  ctx.lineCap='round';
-  ctx.beginPath();
-  pathLine(ctx,PRD_CWD_RESERVE_BOUNDARY,proj,false);
-  ctx.stroke();
-  ctx.fillStyle='rgba(109,40,217,.95)';
-  ctx.font='12px sans-serif';
-  const labelPt=[113.76,22.388];
-  const [tx,ty]=proj.project(labelPt[0],labelPt[1]);
-  ctx.fillText(lang==='zh'?'珠江口白海豚保护区':'PRE CWD Reserve',tx+6,ty-6);
-  ctx.restore();
+
+// ===== GIS 精确分区（升级版）=====
+const ZONES = {
+  expEast: 113.6728,
+  coreWest: 113.75,
+  coreEast: 113.83,
+  coreNorth: 22.40,
+  coreSouth: 22.18
+};
+
+function buildZones(){
+  const reserve = PRD_CWD_RESERVE_BOUNDARY;
+
+  const expZone = [
+    [113.666667, 22.183333],
+    [ZONES.expEast, 22.183333],
+    [ZONES.expEast, 22.400000],
+    [113.666667, 22.400000],
+    [113.666667, 22.183333]
+  ];
+
+  const coreZone = [
+    [ZONES.coreWest, ZONES.coreSouth],
+    [ZONES.coreEast, ZONES.coreSouth],
+    [ZONES.coreEast, ZONES.coreNorth],
+    [ZONES.coreWest, ZONES.coreNorth],
+    [ZONES.coreWest, ZONES.coreSouth]
+  ];
+
+  return { reserve, expZone, coreZone };
 }
+
+
+function drawPRDReserveBoundary(ctx,proj){
+
+  const { reserve, expZone, coreZone } = buildZones();
+
+  // 1 reserve
+  ctx.save();
+  ctx.beginPath();
+  pathLine(ctx, reserve, proj, true);
+  ctx.fillStyle = 'rgba(139,92,246,.08)';
+  ctx.fill();
+  ctx.restore();
+
+  // 2 exp
+  ctx.save();
+  ctx.beginPath();
+  pathLine(ctx, expZone, proj, true);
+  ctx.fillStyle = 'rgba(59,130,246,.38)';
+  ctx.fill();
+  ctx.restore();
+
+  // 3 core
+  ctx.save();
+  ctx.beginPath();
+  pathLine(ctx, coreZone, proj, true);
+  ctx.fillStyle = 'rgba(239,68,68,.50)';
+  ctx.fill();
+  ctx.restore();
+
+  // 4 buffer (difference visual)
+  ctx.save();
+  ctx.beginPath();
+  pathLine(ctx, reserve, proj, true);
+  pathLine(ctx, expZone, proj, true);
+  pathLine(ctx, coreZone, proj, true);
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+
+  ctx.beginPath();
+  pathLine(ctx, reserve, proj, true);
+  ctx.fillStyle = 'rgba(34,197,94,.28)';
+  ctx.fill();
+  ctx.restore();
+
+  // border
+  ctx.save();
+  ctx.beginPath();
+  pathLine(ctx, reserve, proj, false);
+  ctx.strokeStyle = 'rgba(139,92,246,1)';
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+  ctx.restore();
+
+  const [x,y] = proj.project(113.76,22.33);
+  ctx.fillStyle = '#6d28d9';
+  ctx.fillText('CWD Reserve (GIS zones)', x, y);
+}
+
+
 
 function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [geom.coordinates];if(geom.type==='MultiPolygon')return geom.coordinates;if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;return[]}
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
