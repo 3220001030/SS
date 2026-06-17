@@ -392,24 +392,7 @@ function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [ge
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
 function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
 function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
-  drawParks(ctx,proj);
-// draw coastal park tooltip
-if(typeof hoverPark!=='undefined' && hoverPark){
-  const ctx=el.canvas.getContext('2d');
-  const rect=el.canvas.getBoundingClientRect();
-  ctx.save();
-  ctx.font='14px sans-serif';
-  const name=lang==='zh'?hoverPark.zh:hoverPark.en;
-  ctx.fillStyle='rgba(0,0,0,0.7)';
-  const x=20,y=30;
-  const w=ctx.measureText(name).width+20;
-  ctx.fillRect(x,y-18,w,28);
-  ctx.fillStyle='#fff';
-  ctx.fillText(name,x+10,y);
-  ctx.restore();
-}
-updateInfo(info);
-}
+  drawCoastalParks(ctx,proj);updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
 function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
 
@@ -424,75 +407,6 @@ function makeZip(files){let local='',central='',offset=0;files.forEach(file=>{co
 function downloadAllJson(){if(!records.length){alert(T().downloadEmpty);return;}const files=records.map(r=>({name:r.label,geo:r.geo}));const blob=makeZip(files);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chinese_white_dolphin_sighting_geojson.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;draw();});[el.showHK,el.showZH,el.showDry,el.showWet].forEach(x=>x.addEventListener('change',draw));el.downloadAllBtn.addEventListener('click',downloadAllJson);if(el.mapTabBtn)el.mapTabBtn.addEventListener('click',()=>setMainPanel('map'));if(el.refTabBtn)el.refTabBtn.addEventListener('click',()=>setMainPanel('ref'));el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw();},{passive:false});window.addEventListener('resize',draw);}
 (async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
-
-// ===== Coastal Parks Layer (added minimal patch) =====
-const COASTAL_PARKS = [
-  {
-    id:'south_lantau',
-    en:'South Lantau Coastal Park',
-    zh:'南大屿海岸公园',
-    coords: [[113.9149968879587, 22.189707981463386], [113.93024617349187, 22.180908802885487], [113.96162251817343, 22.175272950063455], [113.96168974997941, 22.156570422671393], [113.93822861702347, 22.156537786533985], [113.93028842578177, 22.151107546846507], [113.89631962866892, 22.151070730903644], [113.89190273923475, 22.154043205767668], [113.89183898794175, 22.18087324773011], [113.90292395295063, 22.18982358830778]]
-  },
-  {
-    id:'tai_mo_dao',
-    en:'Tai Mo Dao Coastal Park',
-    zh:'大帽岛海岸公园',
-    coords: [[113.9999807371229, 22.336822926968228], [113.99999662881548, 22.324216295629814], [113.98096315874713, 22.30993516503155], [113.96401668284697, 22.317047954448572], [113.96398653381848, 22.33692413470665], [113.97805554416824, 22.341394056371676], [113.98583121092499, 22.341394379043123]]
-  },
-  {
-    id:'sw_lantau',
-    en:'Lantau Southwest Coastal Park',
-    zh:'西南大屿山海岸公园',
-    coords: [[113.83841796836002, 22.235117228297522], [113.82880529037229, 22.23509694134319], [113.82806290591105, 22.233271176357785], [113.83167174978318, 22.21722250460229], [113.83524025710264, 22.201462607441538], [113.84484263459109, 22.196642058218117]]
-  },
-  {
-    id:'north_lantau',
-    en:'North Lantau Coastal Park',
-    zh:'北大屿海岸公园',
-    coords: [[113.88360751300439, 22.28778097768518], [113.85273005312976, 22.287929966183967], [113.86911714657978, 22.333331138365388], [113.86911944757897, 22.389735354091506], [113.87148836588763, 22.38996560421836]]
-  },
-  {
-    id:'sha_chau',
-    en:'Sha Chau & Lung Kwu Chau Marine Park',
-    zh:'沙洲及龙鼓洲海岸公园',
-    coords: [[113.87148836588763, 22.38996560421836], [113.87162179282386, 22.328739355960913], [113.89830574847797, 22.33815203450882], [113.88983126194137, 22.37138744761967], [113.88508338135327, 22.389990698600084]]
-  }
-];
-
-let hoveredPark = null;
-
-function pointInPoly(pt, vs){
-  let x=pt[0], y=pt[1];
-  let inside=false;
-  for(let i=0,j=vs.length-1;i<vs.length;j=i++){
-    let xi=vs[i][0], yi=vs[i][1];
-    let xj=vs[j][0], yj=vs[j][1];
-    let intersect=((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi+1e-12)+xi);
-    if(intersect) inside=!inside;
-  }
-  return inside;
-}
-
-function drawParks(ctx,proj){
-  ctx.save();
-  COASTAL_PARKS.forEach(p=>{
-    const poly=p.coords;
-    ctx.beginPath();
-    poly.forEach((pt,i)=>{
-      const [x,y]=proj.project(pt[0],pt[1]);
-      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.closePath();
-
-    ctx.fillStyle='rgba(245,158,11,.35)'; //统一黄色
-    ctx.strokeStyle='rgba(245,158,11,.95)';
-    ctx.lineWidth=1.6;
-    ctx.fill();
-    ctx.stroke();
-  });
-  ctx.restore();
-}
-
 </script>
 </body>
 </html>
