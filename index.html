@@ -86,40 +86,7 @@ async function loadHydrology(){
   }catch(e){console.warn(e);}
 }
 
-function 
-// =========================
-// 8 MAJOR ESTUARINE OUTLETS (ADDED)
-// =========================
-const ESTUARIES = [
-  { name: 'Humen 虎门 / Humen Estuary', lon: 113.64, lat: 22.81 },
-  { name: 'Modaomen 磨刀门 / Modaomen Estuary', lon: 113.30, lat: 22.05 },
-  { name: 'Jitimen 鸡啼门 / Jitimen Estuary', lon: 113.45, lat: 22.15 },
-  { name: 'Hengmen 横门 / Hengmen Estuary', lon: 113.55, lat: 22.20 },
-  { name: 'Hongqimen 洪奇门 / Hongqimen Estuary', lon: 113.50, lat: 22.35 },
-  { name: 'Jiaomen 蕉门 / Jiaomen Estuary', lon: 113.60, lat: 22.55 },
-  { name: 'Yamen 崖门 / Yamen Estuary', lon: 113.10, lat: 22.25 },
-  { name: 'Lingdingyang 伶仃洋 / Lingdingyang Outlet', lon: 113.88, lat: 22.47 }
-];
-
-function drawEstuaries(ctx, proj){
-  ctx.save();
-  ESTUARIES.forEach(p=>{
-    const [x,y] = proj.project(p.lon, p.lat);
-    ctx.beginPath();
-    ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle = 'rgba(239,68,68,0.95)';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '12px sans-serif';
-    ctx.fillStyle = '#111827';
-    ctx.fillText(lang==='zh'?p.name.split(' / ')[0]:p.name.split(' / ')[1]||p.name, x+6, y-6);
-  });
-  ctx.restore();
-}
-drawHydrology(ctx, proj){
+function drawHydrology(ctx, proj){
   if(!hydroLines.length) return;
   ctx.save();
   ctx.strokeStyle="rgba(30,144,255,0.55)";
@@ -221,6 +188,40 @@ const MACAU_ADMIN_BOUNDARY=[
 // =========================
 // COASTAL PARKS (YELLOW LAYER)
 // =========================
+
+// =========================
+// ESTUARIES (simple labels only)
+// =========================
+const ESTUARIES = [
+  {name_zh:"虎门", name_en:"Humen", lon:113.64, lat:22.81},
+  {name_zh:"磨刀门", name_en:"Modaomen", lon:113.30, lat:22.05},
+  {name_zh:"蕉门", name_en:"Jiaomen", lon:113.60, lat:22.55},
+  {name_zh:"横门", name_en:"Hengmen", lon:113.55, lat:22.20},
+  {name_zh:"洪奇门", name_en:"Hongqimen", lon:113.50, lat:22.35},
+  {name_zh:"鸡啼门", name_en:"Jitimen", lon:113.45, lat:22.15},
+  {name_zh:"崖门", name_en:"Yamen", lon:113.10, lat:22.25},
+  {name_zh:"伶仃洋", name_en:"Lingdingyang", lon:113.88, lat:22.47}
+];
+
+function drawEstuaries(ctx,proj){
+  ctx.save();
+  ctx.font = "12px sans-serif";
+  ESTUARIES.forEach(p=>{
+    const [x,y]=proj.project(p.lon,p.lat);
+    ctx.beginPath();
+    ctx.arc(x,y,3,0,Math.PI*2);
+    ctx.fillStyle="#ff2d2d";
+    ctx.fill();
+    ctx.strokeStyle="#ffffff";
+    ctx.lineWidth=1;
+    ctx.stroke();
+    const label = (lang==='zh')?p.name_zh:p.name_en;
+    ctx.fillStyle="#10212f";
+    ctx.fillText(label,x+6,y-6);
+  });
+  ctx.restore();
+}
+
 const COASTAL_PARKS = [
   {
     name: "South Lantau Coastal Park",
@@ -455,7 +456,8 @@ function resizeCanvas(){const rect=el.canvas.getBoundingClientRect();const dpr=M
 function baseProjection(){const rect=el.canvas.getBoundingClientRect();const pad=42;const w=rect.width-pad*2,h=rect.height-pad*2;const lonW=maxExtent.maxLon-maxExtent.minLon,latH=maxExtent.maxLat-maxExtent.minLat;const s=Math.min(w/lonW,h/latH)*view.scale;const cx=(maxExtent.minLon+maxExtent.maxLon)/2,cy=(maxExtent.minLat+maxExtent.maxLat)/2;return {project(lon,lat){return [rect.width/2+(lon-cx)*s+view.dx,rect.height/2-(lat-cy)*s+view.dy]},unproject(x,y){return [cx+(x-rect.width/2-view.dx)/s,cy-(y-rect.height/2-view.dy)/s]},s,rect};}
 function pathLine(ctx,line,proj,close=false){let started=false;line.forEach(pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);if(!Number.isFinite(lon)||!Number.isFinite(lat))return;const [x,y]=proj.project(lon,lat);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);});if(started&&close)ctx.closePath();}
 function drawFallbackCoast(ctx,proj){ctx.save();ctx.beginPath();[...FALLBACK_COAST.mainland,...FALLBACK_COAST.islands].forEach(poly=>pathLine(ctx,poly[0]||poly,proj,true));ctx.fillStyle='#eef3e6';ctx.strokeStyle='#9fb091';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();ctx.restore();}
-function drawNaturalEarthCoast(ctx,proj){if(!coastLines.length){drawFallbackCoast(ctx,proj);return;}ctx.save();ctx.strokeStyle='rgba(36,77,98,.92)';ctx.lineWidth=Math.max(1.05,Math.min(2.2,1.15*view.scale));ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();coastLines.forEach(line=>pathLine(ctx,line,proj,false));ctx.stroke();ctx.restore();}
+function drawNaturalEarthCoast(ctx,proj);
+  drawEstuaries(ctx,proj);{if(!coastLines.length){drawFallbackCoast(ctx,proj);return;}ctx.save();ctx.strokeStyle='rgba(36,77,98,.92)';ctx.lineWidth=Math.max(1.05,Math.min(2.2,1.15*view.scale));ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();coastLines.forEach(line=>pathLine(ctx,line,proj,false));ctx.stroke();ctx.restore();}
 
 function drawHKAdminBoundary(ctx,proj){
   if(!Array.isArray(HK_ADMIN_BOUNDARY)||HK_ADMIN_BOUNDARY.length<2)return;
@@ -531,8 +533,7 @@ function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [ge
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
 function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
 function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);
-drawEstuaries(ctx,proj);
-
+  drawEstuaries(ctx,proj);;
 drawHydrology(ctx,proj);
 const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
   drawCoastalParks(ctx,proj);updateInfo(info);}
