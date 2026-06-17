@@ -313,69 +313,53 @@ const BUFFER = [
 
 
 const REFERENCES={
- zhuhai_sightings:[
- 'Chen, T., Hung, S., Qiu, Y., Jia, X., & Jefferson, T. (2010). Distribution, abundance, and individual movements of Indo-Pacific humpback dolphins (<i>Sousa chinensis</i>) in the Pearl River Estuary, China. <i>Mammalia, 74</i>(2), 117–125. https://doi.org/10.1515/mamm.2010.024',
- 'Guo, L., Luo, D., Yu, R.-Q., Zeng, C., Huang, N., Wang, H., & Wu, Y. (2022). Habitat decline of the largest known Indo-Pacific humpback dolphin (<i>Sousa chinensis</i>) population in poorly protected areas associated with the hypoxic zone. <i>Frontiers in Marine Science, 9</i>, 1048959. https://doi.org/10.3389/fmars.2022.1048959',
- 'Tang, X., Luo, D., Sun, X., Sun, B., Guo, L., Wang, H., Huang, N., Liu, Z., Liu, Y., Wang, N., & Wu, Y. (2025). Seasonal distribution and nature reserve planning of Indo-Pacific humpback dolphins in the Pearl River estuary from South China Sea. <i>Global Ecology and Conservation, 61</i>, e03639. https://doi.org/10.1016/j.gecco.2025.e03639'
- ],
- hk_sightings:[
- 'Hung, S. K. Y. (2010). Monitoring of marine mammals in Hong Kong waters... (2009–10). https://www.afcd.gov.hk/tc_chi/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2009_10.pdf',
- 'Hung, S. K. Y. (2011). Monitoring of marine mammals in Hong Kong waters... (2010–11). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2010_11.pdf',
- 'Hung, S. K. Y. (2012). Monitoring of marine mammals in Hong Kong waters... (2011–12). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2011_12.pdf',
- 'Hung, S. K. Y. (2013). Monitoring of marine mammals in Hong Kong waters... (2012–13). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2012_13.pdf',
- 'Hung, S. K. Y. (2014). Monitoring of marine mammals in Hong Kong waters... (2013–14). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2013_14.pdf',
- 'Hung, S. K. Y. (2015). Monitoring of marine mammals in Hong Kong waters... (2014–15). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2014_15.pdf',
- 'Hung, S. K. Y. (2016). Monitoring of marine mammals in Hong Kong waters... (2015–16). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2015_16.pdf',
- 'Hung, S. K. Y. (2017). Monitoring of marine mammals in Hong Kong waters... (2016–17). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2016_17.pdf',
- 'Hung, S. K. Y. (2018). Monitoring of marine mammals in Hong Kong waters... (2017–18). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2017_18.pdf',
- 'Hung, S. K. Y. (2019). Monitoring of marine mammals in Hong Kong waters... (2018–19). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2018_19.pdf',
- 'Hung, S. K. Y. (2020). Monitoring of marine mammals in Hong Kong waters... (2019–20). https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2019_20.pdf',
- 'Hong Kong Cetacean Research Project (2021–2025 reports). Various AFCD reports.'
- ],
- admin_boundaries:[
- {
-  name:'Hong Kong',
-  refs:[
-   'State Council of the PRC (1997). Order No. 221. https://www.basiclaw.gov.hk/filemanager/content/tc/files/basiclawtext/basiclawtext_doc9.pdf'
-  ]
- },
- {
-  name:'Macau',
-  refs:[
-   'Macao SAR Chief Executive Office (2015). Notice No. 128/2015. https://bo.dsaj.gov.mo/bo/i/2015/50/extra/aviso128_cn.asp?printer=1'
-  ]
- }
- ],
- protected_areas:{
- pearl_river_estuary:[
- 'Pearl River Estuary Indo-Pacific humpback dolphin National Nature Reserve (Baike). https://baike.baidu.com/item/珠江口中华白海豚国家级自然保护区'
- ],
- marine_parks:[
- {
-  name:'Sha Chau & Lung Kwu Chau / North Lantau',
-  refs:[
-   'LegCo (2024). Marine Parks Amendment Order. https://www.legco.gov.hk/yr2024/chinese/brief/epcr91542_20240612-c.pdf'
-  ]
- },
- {
-  name:'Big & Small Lingding / Dalian Xiaomo',
-  refs:[
-   'LegCo (2016). Amendment Order. https://www.legco.gov.hk/yr16-17/cn/subleg/brief/2016ln166_brf.pdf'
-  ]
- },
- {
-  name:'Southwest Lantau',
-  refs:[
-   'LegCo (2019). Amendment Order. https://www.legco.gov.hk/yr19-20/cn/subleg/brief/2019ln186_brf.pdf'
-  ]
- },
- {
-  name:'South Lantau',
-  refs:[
-   'LegCo (2022). Amendment Order. https://www.legco.gov.hk/yr2022/cn/brief/epcr91520_20220420-c.pdf'
-  ]
- }
- ]
+  sighting_records:{
+    zhuhai:[
+      'Chen, T., Hung, S., Qiu, Y., Jia, X., & Jefferson, T. (2010). Distribution, abundance, and individual movements of Indo-Pacific humpback dolphins (<i>Sousa chinensis</i>) in the Pearl River Estuary, China. Mammalia 74(2). https://doi.org/10.1515/mamm.2010.024',
+      'Guo, L., Luo, D., Yu, R.-Q., Zeng, C., Huang, N., Wang, H., & Wu, Y. (2022). Habitat decline... Frontiers in Marine Science. https://doi.org/10.3389/fmars.2022.1048959',
+      'Tang, X., Luo, D., Sun, X., Sun, B., Guo, L., Wang, H., Huang, N., Liu, Z., Liu, Y., Wang, N., & Wu, Y. (2025). Seasonal distribution... Global Ecology and Conservation. https://doi.org/10.1016/j.gecco.2025.e03639'
+    ],
+    hong_kong:[
+      'Hung, S. K. Y. (2010). Monitoring of marine mammals in Hong Kong waters 2009–10. AFCD. https://www.afcd.gov.hk/tc_chi/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2009_10.pdf',
+      'Hung, S. K. Y. (2011). Monitoring... 2010–11. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2010_11.pdf',
+      'Hung, S. K. Y. (2012). Monitoring... 2011–12. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2011_12.pdf',
+      'Hung, S. K. Y. (2013). Monitoring... 2012–13. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2012_13.pdf',
+      'Hung, S. K. Y. (2014). Monitoring... 2013–14. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2013_14.pdf',
+      'Hung, S. K. Y. (2015). Monitoring... 2014–15. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2014_15.pdf',
+      'Hung, S. K. Y. (2016). Monitoring... 2015–16. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2015_16.pdf',
+      'Hung, S. K. Y. (2017). Monitoring... 2016–17. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2016_17.pdf',
+      'Hung, S. K. Y. (2018). Monitoring... 2017–18. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2017_18.pdf',
+      'Hung, S. K. Y. (2019). Monitoring... 2018–19. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2018_19.pdf',
+      'Hung, S. K. Y. (2020). Monitoring... 2019–20. https://www.afcd.gov.hk/english/conservation/con_mar/con_mar_chi/con_mar_chi_chi/files/Final_Report_2019_20.pdf',
+      'Hong Kong Cetacean Research Project (2021–2025 reports). AFCD.'
+    ]
+  },
+  admin_boundaries:{
+    hong_kong:[
+      'State Council of PRC (1997). Order No. 221. https://www.basiclaw.gov.hk/filemanager/content/tc/files/basiclawtext/basiclawtext_doc9.pdf'
+    ],
+    macau:[
+      'Macao SAR Chief Executive Office (2015). Notice No.128/2015. https://bo.dsaj.gov.mo/bo/i/2015/50/extra/aviso128_cn.asp?printer=1'
+    ]
+  },
+  protected_areas:{
+    pearl_river_estuary:[
+      'Pearl River Estuary CWD National Nature Reserve (Baike). https://baike.baidu.com/item/珠江口中华白海豚国家级自然保护区'
+    ],
+    marine_parks:{
+      sha_chau_north_lantau:[
+        'LegCo 2024 amendment order brief. https://www.legco.gov.hk/yr2024/chinese/brief/epcr91542_20240612-c.pdf'
+      ],
+      big_small_lingding:[
+        'LegCo 2016 amendment order brief. https://www.legco.gov.hk/yr16-17/cn/subleg/brief/2016ln166_brf.pdf'
+      ],
+      southwest_lantau:[
+        'LegCo 2019 amendment order brief. https://www.legco.gov.hk/yr19-20/cn/subleg/brief/2019ln186_brf.pdf'
+      ],
+      south_lantau:[
+        'LegCo 2022 amendment order brief. https://www.legco.gov.hk/yr2022/cn/brief/epcr91520_20220420-c.pdf'
+      ]
+    }
 };
 const el={loadingOverlay:document.getElementById('loadingOverlay'),loadingBarFill:document.getElementById('loadingBarFill'),loadingPercent:document.getElementById('loadingPercent'),loadingStatus:document.getElementById('loadingStatus'),titleMain:document.getElementById('titleMain'),subMain:document.getElementById('subMain'),langBtn:document.getElementById('langBtn'),loadNote:document.getElementById('loadNote'),yearLabel:document.getElementById('yearLabel'),yearRange:document.getElementById('yearRange'),yearText:document.getElementById('yearText'),showHK:document.getElementById('showHK'),showZH:document.getElementById('showZH'),showDry:document.getElementById('showDry'),showWet:document.getElementById('showWet'),showHKText:document.getElementById('showHKText'),showZHText:document.getElementById('showZHText'),seasonLabel:document.getElementById('seasonLabel'),showDryText:document.getElementById('showDryText'),showWetText:document.getElementById('showWetText'),downloadAllBtn:document.getElementById('downloadAllBtn'),areaLabel:document.getElementById('areaLabel'),viewLabel:document.getElementById('viewLabel'),resetViewBtn:document.getElementById('resetViewBtn'),zoomInBtn:document.getElementById('zoomInBtn'),zoomOutBtn:document.getElementById('zoomOutBtn'),diagnosticText:document.getElementById('diagnosticText'),stats:document.getElementById('stats'),activePill:document.getElementById('activePill'),mapTitle:document.getElementById('mapTitle'),mapSub:document.getElementById('mapSub'),mapTabBtn:document.getElementById('mapTabBtn'),refTabBtn:document.getElementById('refTabBtn'),mapView:document.getElementById('mapView'),refView:document.getElementById('refView'),refHeading:document.getElementById('refHeading'),referenceList:document.getElementById('referenceList'),canvas:document.getElementById('mapCanvas'),legendLabel:document.getElementById('legendLabel'),hkLegend:document.getElementById('hkLegend'),zhLegend:document.getElementById('zhLegend'),coastLegend:document.getElementById('coastLegend'),adminLegend:document.getElementById('adminLegend'),macauAdminLegend:document.getElementById('macauAdminLegend'),reserveLegend:document.getElementById('reserveLegend'),sumTitle1:document.getElementById('sumTitle1'),sumTitle2:document.getElementById('sumTitle2'),sumTitle3:document.getElementById('sumTitle3'),yearBig:document.getElementById('yearBig'),yearFiles:document.getElementById('yearFiles'),featureBig:document.getElementById('featureBig'),featureList:document.getElementById('featureList'),extentList:document.getElementById('extentList')};
 let records=[],diagnostics={ok:0,miss:0,err:0},selectedYear=2005,maxExtent={...DEFAULT_EXTENT},view={scale:1,dx:0,dy:0},dragging=false,lastPt=null,coastLines=[],coastStatus='未加载 / not loaded';
