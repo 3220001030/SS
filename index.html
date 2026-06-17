@@ -501,6 +501,7 @@ function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('acti
 drawHydrology(ctx,proj);
 const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
   drawCoastalParks(ctx,proj);
+  drawRiverMouths(ctx,proj);
 // =========================
 // PEARL RIVER ESTUARY 8 MOUTHS (ADDED)
 // =========================
