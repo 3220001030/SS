@@ -57,129 +57,52 @@ const ZH_FILES=[
 ];
 const FILES=[...HK_FILES,...ZH_FILES];
 const NATURAL_EARTH_COAST_URLS=['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_coastline.geojson','https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_coastline.geojson'];
-
 // =========================
-// NATURAL EARTH HYDRO UPGRADED (RIVERS + LAKES)
+// NATURAL EARTH HYDROLOGY (ADDED)
 // =========================
-
-const NATURAL_EARTH_HYDRO_URLS = [
+const HYDRO_URLS = [
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_rivers_lake_centerlines.geojson",
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson"
 ];
 
-let hydroFeatures = [];
-let hydroStatus = '未加载 / not loaded';
-
-async function loadNaturalEarthHydro(){
-  hydroFeatures = [];
-  try{
-    for(const url of NATURAL_EARTH_HYDRO_URLS){
-      const r = await fetch(url, {cache:'force-cache'});
-      if(!r.ok) continue;
-      const geo = await r.json();
-      (geo.features||[]).forEach(f=>{
-        if(f && f.geometry) hydroFeatures.push(f.geometry);
-      });
-    }
-    hydroStatus = 'Natural Earth hydro loaded';
-  }catch(e){
-    hydroFeatures = [];
-    hydroStatus = 'hydro fallback';
-  }
-}
-
-function geomToLines2(geom){
-  if(!geom) return [];
-  if(geom.type==='LineString') return [geom.coordinates];
-  if(geom.type==='MultiLineString') return geom.coordinates;
-  if(geom.type==='Polygon') return geom.coordinates;
-  if(geom.type==='MultiPolygon') return geom.coordinates.flat();
-  return [];
-}
-
-function drawHydro(ctx, proj){
-  if(!hydroFeatures.length) return;
-
-  ctx.save();
-  ctx.strokeStyle = 'rgba(56,189,248,0.55)';
-  ctx.lineWidth = Math.max(0.8, Math.min(1.8, 1.1*view.scale));
-  ctx.beginPath();
-
-  hydroFeatures.forEach(g=>{
-    const lines = geomToLines2(g);
-    lines.forEach(line=>{
-      // simple draw, rely on canvas clipping
-      pathLine(ctx, line, proj, false);
-    });
-  });
-
-  ctx.stroke();
-  ctx.restore();
-}
-
-
-// =========================
-// NATURAL EARTH HYDRO (LIGHTWEIGHT)
-// Rivers / Lakes centerlines (filtered by bbox)
-// =========================
-
-const NATURAL_EARTH_HYDRO_URLS = [
-  "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_rivers_lake_centerlines.geojson"
-];
-
 let hydroLines = [];
-let hydroStatus = '未加载 / not loaded';
 
-async function loadNaturalEarthHydro(){
+async function loadHydrology(){
   try{
-    for(const url of NATURAL_EARTH_HYDRO_URLS){
-      const r = await fetch(url, {cache:'force-cache'});
+    for(const url of HYDRO_URLS){
+      const r = await fetch(url);
       if(!r.ok) continue;
       const geo = await r.json();
-
       const lines = [];
-      const bbox = DEFAULT_EXTENT;
-
-      function addLine(line){
-        if(!Array.isArray(line) || line.length<2) return;
-        const ok = line.some(pt=>{
-          const lon=Number(pt[0]), lat=Number(pt[1]);
-          return lon>=bbox.minLon && lon<=bbox.maxLon && lat>=bbox.minLat && lat<=bbox.maxLat;
-        });
-        if(ok) lines.push(line);
-      }
-
-      (geo.features||[]).forEach(f=>{
-        const g=f.geometry;
+      (geo.features || []).forEach(f=>{
+        const g = f.geometry;
         if(!g) return;
-        if(g.type==='LineString') addLine(g.coordinates);
-        else if(g.type==='MultiLineString') g.coordinates.forEach(addLine);
+        if(g.type === "LineString") lines.push(g.coordinates);
+        else if(g.type === "MultiLineString") lines.push(...g.coordinates);
+        else if(g.type === "Polygon") lines.push(g.coordinates[0]);
       });
-
-      if(lines.length){
-        hydroLines = lines;
-        hydroStatus = 'Natural Earth hydro loaded';
-        return;
-      }
+      hydroLines.push(...lines);
     }
-  }catch(e){
-    hydroLines = [];
-    hydroStatus = 'hydro fallback';
-  }
+  }catch(e){console.warn(e);}
 }
 
-function drawHydro(ctx, proj){
+function drawHydrology(ctx, proj){
   if(!hydroLines.length) return;
   ctx.save();
-  ctx.strokeStyle = 'rgba(56,189,248,0.55)';
-  ctx.lineWidth = Math.max(0.8, Math.min(1.6, 1.1*view.scale));
+  ctx.strokeStyle="rgba(30,144,255,0.55)";
+  ctx.lineWidth=1.1;
   ctx.beginPath();
   hydroLines.forEach(line=>{
-    pathLine(ctx, line, proj, false);
+    line.forEach((pt,i)=>{
+      const [x,y]=proj.project(pt[0],pt[1]);
+      if(i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    });
   });
   ctx.stroke();
   ctx.restore();
 }
+
 const DEFAULT_EXTENT={minLon:113.38,maxLon:114.55,minLat:21.70,maxLat:22.80};
 const FALLBACK_COAST={mainland:[[[113.38,22.80],[114.55,22.80],[114.55,22.55],[114.44,22.51],[114.35,22.50],[114.25,22.55],[114.16,22.52],[114.05,22.48],[113.94,22.45],[113.84,22.39],[113.77,22.31],[113.69,22.23],[113.60,22.16],[113.50,22.10],[113.38,22.04],[113.38,22.80]]],islands:[[[113.49,22.27],[113.62,22.30],[113.70,22.24],[113.68,22.17],[113.57,22.13],[113.49,22.17],[113.49,22.27]],[[113.80,22.18],[113.92,22.21],[114.03,22.18],[114.10,22.24],[114.18,22.28],[114.26,22.26],[114.30,22.20],[114.25,22.15],[114.13,22.12],[114.02,22.14],[113.90,22.12],[113.82,22.13],[113.80,22.18]],[[113.64,22.06],[113.78,22.08],[113.86,22.04],[113.82,21.97],[113.70,21.95],[113.62,21.99],[113.64,22.06]],[[114.18,22.05],[114.28,22.07],[114.33,22.02],[114.30,21.96],[114.20,21.95],[114.14,22.00],[114.18,22.05]]],labels:[{name:'Zhuhai / 珠海',lon:113.58,lat:22.27},{name:'Hong Kong / 香港',lon:114.14,lat:22.31},{name:'Pearl River Estuary / 珠江口',lon:113.86,lat:22.31}]};
 
@@ -488,9 +411,7 @@ function bboxIntersectsLine(line,b,pad=0.08){return line.some(pt=>{const lon=Num
 function geometryToLines(geom){if(!geom)return[];if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;if(geom.type==='Polygon')return geom.coordinates;if(geom.type==='MultiPolygon')return geom.coordinates.flat();if(geom.type==='GeometryCollection')return (geom.geometries||[]).flatMap(geometryToLines);return[];}
 async function loadNaturalEarthCoast(){for(const url of NATURAL_EARTH_COAST_URLS){try{setProgress(86,'读取 Natural Earth 10m 海岸线 / Loading coastline…');const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const lines=[];(geo.features||[]).forEach(f=>geometryToLines(f.geometry).forEach(line=>{if(Array.isArray(line)&&line.length>1&&bboxIntersectsLine(line,DEFAULT_EXTENT,1.0))lines.push(line)}));if(lines.length){coastLines=lines;coastStatus=T().coastOnline;return true;}}catch(e){}}coastLines=[];coastStatus=T().coastFallback;return false;}
 async function loadAll(){setProgress(5,'准备中 / Preparing…');let unionB=null;for(let i=0;i<FILES.length;i++){const spec=FILES[i];setProgress(5+76*(i/FILES.length),`读取 ${spec.label}`);const got=await fetchFirst(spec.paths);diagnostics.miss+=got.missed;if(!got.json){diagnostics.miss++;continue}try{const geo=normalizeGeoJSON(got.json);if(!geo)throw new Error('Not FeatureCollection');const b=getBounds(geo.features);records.push({...spec,path:got.path,geo,b,features:geo.features});diagnostics.ok++;if(b)unionB=unionB?union(unionB,b):b;}catch(e){diagnostics.err++;}}
-maxExtent=padExtent(unionB?union(unionB,DEFAULT_EXTENT):DEFAULT_EXTENT,0.03);await loadNaturalEarthCoast();
-    await loadNaturalEarthHydro();
-    await loadNaturalEarthHydro();resetView();setProgress(94,'渲染 / Rendering…');}
+maxExtent=padExtent(unionB?union(unionB,DEFAULT_EXTENT):DEFAULT_EXTENT,0.03);await loadNaturalEarthCoast();resetView();setProgress(94,'渲染 / Rendering…');}
 function resetView(){view={scale:1,dx:0,dy:0};draw();}
 function effectiveYear(y){return y>=2024&&y<=2025?2023:y;}
 function recordVisibleForYear(r,y){const ey=effectiveYear(y);const ds=Number.isFinite(r.displayStart)?r.displayStart:r.start;const de=Number.isFinite(r.displayEnd)?r.displayEnd:r.end;return ey>=ds&&ey<=de;}
@@ -577,8 +498,8 @@ function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [ge
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
 function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
 function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);
-  drawHydro(ctx,proj);
-  drawHydro(ctx,proj);const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
+drawHydrology(ctx,proj);
+const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
   drawCoastalParks(ctx,proj);updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
 function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
@@ -594,6 +515,8 @@ function makeZip(files){let local='',central='',offset=0;files.forEach(file=>{co
 function downloadAllJson(){if(!records.length){alert(T().downloadEmpty);return;}const files=records.map(r=>({name:r.label,geo:r.geo}));const blob=makeZip(files);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chinese_white_dolphin_sighting_geojson.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;draw();});[el.showHK,el.showZH,el.showDry,el.showWet].forEach(x=>x.addEventListener('change',draw));el.downloadAllBtn.addEventListener('click',downloadAllJson);if(el.mapTabBtn)el.mapTabBtn.addEventListener('click',()=>setMainPanel('map'));if(el.refTabBtn)el.refTabBtn.addEventListener('click',()=>setMainPanel('ref'));el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw();},{passive:false});window.addEventListener('resize',draw);}
 (async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
+loadHydrology();
+
 </script>
 </body>
 </html>
