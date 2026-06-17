@@ -359,6 +359,65 @@ function drawMacauAdminBoundary(ctx,proj){
 }
 
 
+
+// ===================== Coastal Parks (Unified Layer) =====================
+const COASTAL_PARKS = [
+ { nameZh:"南大屿山海岸公园", nameEn:"South Lantau Coastal Park", coords: SOUTH_LANTAU || null },
+ { nameZh:"大澳海岸公园", nameEn:"Tai Mo Dao Coastal Park", coords: TAI_MO_DAO || null },
+ { nameZh:"西南大屿山海岸公园", nameEn:"Lantau Southwest Coastal Park", coords: LANTAU_SOUTHWEST || null },
+ { nameZh:"北大屿山海岸公园", nameEn:"North Lantau Coastal Park", coords: NORTH_LANTAU || null },
+ { nameZh:"沙洲及龙鼓洲海岸公园", nameEn:"Sha Chau & Lung Kwu Chau Marine Park", coords: SHA_CHAU_LUNG_KWU || null }
+];
+
+function drawCoastalParks(ctx, proj){
+  COASTAL_PARKS.forEach(p=>{
+    if(!p.coords) return;
+    ctx.save();
+    ctx.beginPath();
+    pathLine(ctx, p.coords, proj, true);
+    ctx.fillStyle = "rgba(245,204,0,0.35)";
+    ctx.strokeStyle = "rgba(245,204,0,0.9)";
+    ctx.lineWidth = Math.max(1.2, Math.min(2.5, 1.4*view.scale));
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+// hover tooltip
+let hoverPark = null;
+
+function hitTestParks(lon, lat){
+  function pointInPoly(pt, poly){
+    let x=pt[0], y=pt[1], inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      let xi=poly[i][0], yi=poly[i][1];
+      let xj=poly[j][0], yj=poly[j][1];
+      let intersect=((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi+0.0000001)+xi);
+      if(intersect) inside=!inside;
+    }
+    return inside;
+  }
+
+  for(const p of COASTAL_PARKS){
+    if(!p.coords) continue;
+    if(pointInPoly([lon,lat], p.coords)){
+      return p;
+    }
+  }
+  return null;
+}
+
+// modify mousemove (append only)
+const _oldMouseMove = window.onmousemove;
+window.addEventListener('mousemove', (e)=>{
+  const rect = el.canvas.getBoundingClientRect();
+  const proj = baseProjection();
+  const lonlat = proj.unproject(e.clientX-rect.left, e.clientY-rect.top);
+  hoverPark = hitTestParks(lonlat[0], lonlat[1]);
+});
+
+
 function drawPRDReserveBoundary(ctx,proj){
   // EXPERIMENT
   ctx.save();
