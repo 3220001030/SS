@@ -37,14 +37,14 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
     </div></aside>
     <main class="main">
       <div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
-      <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span></div></div></section>
+      <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #22c55e;border-radius:0"></span><span id="macauAdminLegend">澳门行政边界</span></span></div></div></section>
       <div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
     </main>
   </div>
   <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
 </div>
 <script>
-const I18N={zh:{title:'中华白海豚数据库',sub:'香港与珠海水域中华白海豚目击记录。',langBtn:'English',year:'年份',area:'显示水域',hk:'香港水域',zh:'珠海水域',season:'季度',dry:'干季',wet:'湿季',downloadAll:'一键下载全部 JSON',view:'视图',reset:'回到最大地理范围',zin:'放大',zout:'缩小',mapTitle:'目击记录地图',mapSub:'',legend:'图例',hkLegend:'香港 GeoJSON',zhLegend:'珠海 GeoJSON',coast:'海岸线',hkAdmin:'香港行政边界',max:'最大地理范围',loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,sum1:'当前年份',sum2:'当前显示要素',sum3:'最大地理范围',extent:'经度 / 纬度范围',noData:'当前年份没有加载到可显示的 GeoJSON。',matched:'当前年份命中文件',substitute:'珠海 2009–2014 使用 2005–2008 数据代替',futureSubstitute:'2024–2025 使用此前最近年份（2023）数据代替',downloadEmpty:'暂无可下载的 JSON 文件。',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m 在线海岸线',coastFallback:'内置备用海岸线'},en:{title:'Chinese White Dolphin Database',sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',langBtn:'中文',year:'Year',area:'Waters',hk:'Hong Kong waters',zh:'Zhuhai waters',season:'Season',dry:'Dry season',wet:'Wet season',downloadAll:'Download all JSON',view:'View',reset:'Reset to maximum extent',zin:'Zoom in',zout:'Zoom out',mapTitle:'Sighting map',mapSub:'',legend:'Legend',hkLegend:'Hong Kong GeoJSON',zhLegend:'Zhuhai GeoJSON',coast:'Coastline',hkAdmin:'Hong Kong administrative boundary',max:'Maximum extent',loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,sum1:'Selected year',sum2:'Visible features',sum3:'Maximum extent',extent:'Longitude / latitude range',noData:'No displayable GeoJSON was loaded for this year.',matched:'Matched files',substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',futureSubstitute:'2024–2025 uses the nearest previous year (2023) as substitute',downloadEmpty:'No loaded JSON files are available for download.',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m online coastline',coastFallback:'Built-in fallback coastline'}};
+const I18N={zh:{title:'中华白海豚数据库',sub:'香港与珠海水域中华白海豚目击记录。',langBtn:'English',year:'年份',area:'显示水域',hk:'香港水域',zh:'珠海水域',season:'季度',dry:'干季',wet:'湿季',downloadAll:'一键下载全部 JSON',view:'视图',reset:'回到最大地理范围',zin:'放大',zout:'缩小',mapTitle:'目击记录地图',mapSub:'',legend:'图例',hkLegend:'香港 GeoJSON',zhLegend:'珠海 GeoJSON',coast:'海岸线',hkAdmin:'香港行政边界',macauAdmin:'澳门行政边界',max:'最大地理范围',loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,sum1:'当前年份',sum2:'当前显示要素',sum3:'最大地理范围',extent:'经度 / 纬度范围',noData:'当前年份没有加载到可显示的 GeoJSON。',matched:'当前年份命中文件',substitute:'珠海 2009–2014 使用 2005–2008 数据代替',futureSubstitute:'2024–2025 使用此前最近年份（2023）数据代替',downloadEmpty:'暂无可下载的 JSON 文件。',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m 在线海岸线',coastFallback:'内置备用海岸线'},en:{title:'Chinese White Dolphin Database',sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',langBtn:'中文',year:'Year',area:'Waters',hk:'Hong Kong waters',zh:'Zhuhai waters',season:'Season',dry:'Dry season',wet:'Wet season',downloadAll:'Download all JSON',view:'View',reset:'Reset to maximum extent',zin:'Zoom in',zout:'Zoom out',mapTitle:'Sighting map',mapSub:'',legend:'Legend',hkLegend:'Hong Kong GeoJSON',zhLegend:'Zhuhai GeoJSON',coast:'Coastline',hkAdmin:'Hong Kong administrative boundary',macauAdmin:'Macao administrative boundary',max:'Maximum extent',loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,sum1:'Selected year',sum2:'Visible features',sum3:'Maximum extent',extent:'Longitude / latitude range',noData:'No displayable GeoJSON was loaded for this year.',matched:'Matched files',substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',futureSubstitute:'2024–2025 uses the nearest previous year (2023) as substitute',downloadEmpty:'No loaded JSON files are available for download.',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m online coastline',coastFallback:'Built-in fallback coastline'}};
 let lang=localStorage.getItem('cwd_lang')||'zh';
 const YEARS=Array.from({length:21},(_,i)=>2005+i);
 const HK_FILES=YEARS.map(y=>({region:'hk',season:'all',start:y,end:y,label:`hk_${y}.geojson`,paths:[`./sighting/hk/hk_${y}.geojson`,`./hk_${y}.geojson`]}));
@@ -70,7 +70,74 @@ const HK_ADMIN_BOUNDARY=[
  [114.237056,22.550722],[114.233639,22.543667],[114.226347,22.543669]
 ];
 
-const el={loadingOverlay:document.getElementById('loadingOverlay'),loadingBarFill:document.getElementById('loadingBarFill'),loadingPercent:document.getElementById('loadingPercent'),loadingStatus:document.getElementById('loadingStatus'),titleMain:document.getElementById('titleMain'),subMain:document.getElementById('subMain'),langBtn:document.getElementById('langBtn'),loadNote:document.getElementById('loadNote'),yearLabel:document.getElementById('yearLabel'),yearRange:document.getElementById('yearRange'),yearText:document.getElementById('yearText'),showHK:document.getElementById('showHK'),showZH:document.getElementById('showZH'),showDry:document.getElementById('showDry'),showWet:document.getElementById('showWet'),showHKText:document.getElementById('showHKText'),showZHText:document.getElementById('showZHText'),seasonLabel:document.getElementById('seasonLabel'),showDryText:document.getElementById('showDryText'),showWetText:document.getElementById('showWetText'),downloadAllBtn:document.getElementById('downloadAllBtn'),areaLabel:document.getElementById('areaLabel'),viewLabel:document.getElementById('viewLabel'),resetViewBtn:document.getElementById('resetViewBtn'),zoomInBtn:document.getElementById('zoomInBtn'),zoomOutBtn:document.getElementById('zoomOutBtn'),diagnosticText:document.getElementById('diagnosticText'),stats:document.getElementById('stats'),activePill:document.getElementById('activePill'),mapTitle:document.getElementById('mapTitle'),mapSub:document.getElementById('mapSub'),canvas:document.getElementById('mapCanvas'),legendLabel:document.getElementById('legendLabel'),hkLegend:document.getElementById('hkLegend'),zhLegend:document.getElementById('zhLegend'),coastLegend:document.getElementById('coastLegend'),adminLegend:document.getElementById('adminLegend'),sumTitle1:document.getElementById('sumTitle1'),sumTitle2:document.getElementById('sumTitle2'),sumTitle3:document.getElementById('sumTitle3'),yearBig:document.getElementById('yearBig'),yearFiles:document.getElementById('yearFiles'),featureBig:document.getElementById('featureBig'),featureList:document.getElementById('featureList'),extentList:document.getElementById('extentList')};
+const MACAU_ADMIN_BOUNDARY=[
+ [113.550925,22.215425],
+ [113.550778,22.215522],
+ [113.550722,22.215664],
+ [113.550847,22.217036],
+ [113.550003,22.216933],
+ [113.549653,22.216733],
+ [113.549200,22.216614],
+ [113.548753,22.216617],
+ [113.548336,22.216733],
+ [113.547717,22.216658],
+ [113.547628,22.216558],
+ [113.547039,22.216781],
+ [113.546567,22.216783],
+ [113.546506,22.216797],
+ [113.545478,22.216811],
+ [113.545189,22.216922],
+ [113.544356,22.216953],
+ [113.543392,22.216314],
+ [113.542464,22.214433],
+ [113.542408,22.214286],
+ [113.542014,22.213694],
+ [113.541956,22.213672],
+ [113.541717,22.213233],
+ [113.541533,22.213325],
+ [113.541331,22.213086],
+ [113.541181,22.213022],
+ [113.540900,22.213033],
+ [113.538142,22.213642],
+ [113.536333,22.213636],
+ [113.535706,22.213558],
+ [113.535439,22.213475],
+ [113.535292,22.213492],
+ [113.534944,22.213525],
+ [113.533083,22.212306],
+ [113.533969,22.209644],
+ [113.534653,22.207367],
+ [113.535389,22.206694],
+ [113.535639,22.202306],
+ [113.533611,22.194500],
+ [113.529222,22.188528],
+ [113.530194,22.187917],
+ [113.529167,22.186556],
+ [113.528361,22.184500],
+ [113.528167,22.182167],
+ [113.529417,22.177000],
+ [113.530583,22.175444],
+ [113.531972,22.173306],
+ [113.532139,22.172083],
+ [113.539528,22.157000],
+ [113.545250,22.150778],
+ [113.549556,22.145361],
+ [113.548306,22.115583],
+ [113.549639,22.108861],
+ [113.570972,22.098833],
+ [113.570972,22.076667],
+ [113.610222,22.076667],
+ [113.630139,22.108861],
+ [113.630139,22.165639],
+ [113.605250,22.204111],
+ [113.571056,22.204028],
+ [113.568972,22.209083],
+ [113.562278,22.212222],
+ [113.552028,22.216000],
+ [113.550925,22.215425]
+];
+
+const el={loadingOverlay:document.getElementById('loadingOverlay'),loadingBarFill:document.getElementById('loadingBarFill'),loadingPercent:document.getElementById('loadingPercent'),loadingStatus:document.getElementById('loadingStatus'),titleMain:document.getElementById('titleMain'),subMain:document.getElementById('subMain'),langBtn:document.getElementById('langBtn'),loadNote:document.getElementById('loadNote'),yearLabel:document.getElementById('yearLabel'),yearRange:document.getElementById('yearRange'),yearText:document.getElementById('yearText'),showHK:document.getElementById('showHK'),showZH:document.getElementById('showZH'),showDry:document.getElementById('showDry'),showWet:document.getElementById('showWet'),showHKText:document.getElementById('showHKText'),showZHText:document.getElementById('showZHText'),seasonLabel:document.getElementById('seasonLabel'),showDryText:document.getElementById('showDryText'),showWetText:document.getElementById('showWetText'),downloadAllBtn:document.getElementById('downloadAllBtn'),areaLabel:document.getElementById('areaLabel'),viewLabel:document.getElementById('viewLabel'),resetViewBtn:document.getElementById('resetViewBtn'),zoomInBtn:document.getElementById('zoomInBtn'),zoomOutBtn:document.getElementById('zoomOutBtn'),diagnosticText:document.getElementById('diagnosticText'),stats:document.getElementById('stats'),activePill:document.getElementById('activePill'),mapTitle:document.getElementById('mapTitle'),mapSub:document.getElementById('mapSub'),canvas:document.getElementById('mapCanvas'),legendLabel:document.getElementById('legendLabel'),hkLegend:document.getElementById('hkLegend'),zhLegend:document.getElementById('zhLegend'),coastLegend:document.getElementById('coastLegend'),adminLegend:document.getElementById('adminLegend'),macauAdminLegend:document.getElementById('macauAdminLegend'),sumTitle1:document.getElementById('sumTitle1'),sumTitle2:document.getElementById('sumTitle2'),sumTitle3:document.getElementById('sumTitle3'),yearBig:document.getElementById('yearBig'),yearFiles:document.getElementById('yearFiles'),featureBig:document.getElementById('featureBig'),featureList:document.getElementById('featureList'),extentList:document.getElementById('extentList')};
 let records=[],diagnostics={ok:0,miss:0,err:0},selectedYear=2005,maxExtent={...DEFAULT_EXTENT},view={scale:1,dx:0,dy:0},dragging=false,lastPt=null,coastLines=[],coastStatus='未加载 / not loaded';
 function T(){return I18N[lang]} function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function setProgress(p,msg){p=Math.max(0,Math.min(100,p));el.loadingBarFill.style.width=p+'%';el.loadingPercent.textContent=p.toFixed(0)+'%';if(msg)el.loadingStatus.textContent=msg}
@@ -120,12 +187,32 @@ function drawHKAdminBoundary(ctx,proj){
   ctx.restore();
 }
 
+function drawMacauAdminBoundary(ctx,proj){
+  if(!Array.isArray(MACAU_ADMIN_BOUNDARY)||MACAU_ADMIN_BOUNDARY.length<2)return;
+  ctx.save();
+  ctx.strokeStyle='rgba(34,197,94,.98)';
+  ctx.lineWidth=Math.max(1.3,Math.min(3,1.45*view.scale));
+  ctx.setLineDash([8,5]);
+  ctx.lineJoin='round';
+  ctx.lineCap='round';
+  ctx.beginPath();
+  pathLine(ctx,MACAU_ADMIN_BOUNDARY,proj,false);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(21,128,61,.95)';
+  ctx.font='12px sans-serif';
+  const mid=MACAU_ADMIN_BOUNDARY[55]||MACAU_ADMIN_BOUNDARY[Math.floor(MACAU_ADMIN_BOUNDARY.length/2)];
+  const [tx,ty]=proj.project(mid[0],mid[1]);
+  ctx.fillText(lang==='zh'?'澳门行政边界':'Macao boundary',tx+6,ty-6);
+  ctx.restore();
+}
+
 function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [geom.coordinates];if(geom.type==='MultiPolygon')return geom.coordinates;if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;return[]}
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
 function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
-function draw(){if(!el.canvas)return;resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);drawHKAdminBoundary(ctx,proj);const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);updateInfo(info);}
+function draw(){if(!el.canvas)return;resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
-function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
+function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
 
 function crc32(str){let c=~0;for(let i=0;i<str.length;i++){c^=str.charCodeAt(i);for(let k=0;k<8;k++)c=(c>>>1)^(0xEDB88320&-(c&1));}return ~c>>>0;}
 function u16(n){return String.fromCharCode(n&255,(n>>>8)&255);}
