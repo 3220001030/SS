@@ -535,9 +535,9 @@ const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineW
   drawCoastalParks(ctx,proj);
   drawRiverMouths(ctx,proj);
 // =========================
-// PEARL RIVER ESTUARY 8 MOUTHS (ADDED)
-// =========================
-const PEARL_RIVER_MOUTHS = [
+// PEARL RIVER ESTUARY 8 MOUTHS (STABLE FIX)
+// moved to window to avoid TDZ error
+window.PEARL_RIVER_MOUTHS = [
   {name:"Humen / 虎门口", lon:113.67, lat:22.82},
   {name:"Jiaomen / 蕉门口", lon:113.55, lat:22.70},
   {name:"Hongqimen / 洪奇门", lon:113.45, lat:22.55},
@@ -550,7 +550,7 @@ const PEARL_RIVER_MOUTHS = [
 
 function drawRiverMouths(ctx, proj){
   ctx.save();
-  PEARL_RIVER_MOUTHS.forEach(p=>{
+  (window.PEARL_RIVER_MOUTHS||[]).forEach(p=>{
     const [x,y]=proj.project(p.lon,p.lat);
     ctx.beginPath();
     ctx.arc(x,y,4,0,Math.PI*2);
