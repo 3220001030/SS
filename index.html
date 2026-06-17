@@ -21,6 +21,15 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
 .summaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}@media(max-width:900px){.summaryGrid{grid-template-columns:1fr}}.summaryCard{border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px}.summaryCard h3{margin:0 0 10px;font-size:15px}.bigNum{font-size:30px;font-weight:900;color:#075985}.list{display:grid;gap:6px;color:var(--muted);font-size:12px}.fileOk{color:#047857}.fileMiss{color:#b45309}.fileErr{color:#b91c1c}.fileSub{color:#7c2d12}
 .loadingOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(900px 500px at 10% -10%,rgba(14,165,233,.18),transparent 55%),radial-gradient(1000px 600px at 100% 0%,rgba(2,132,199,.10),transparent 50%),rgba(244,251,255,.96);backdrop-filter:blur(10px);opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}.loadingOverlay.hidden{opacity:0;visibility:hidden;pointer-events:none}.loadingPanel{width:min(560px,92vw);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 48px rgba(15,23,42,.10);padding:26px 24px 22px}.loadingTitle{margin:0 0 8px;font-size:22px;font-weight:800}.loadingSub{margin:0 0 16px;color:var(--muted);font-size:14px}.loadingBar{height:12px;border-radius:999px;overflow:hidden;background:#e4eef4;border:1px solid #d7e5ef}.loadingBarFill{width:0%;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98));transition:width .25s ease}.loadingMeta{display:flex;justify-content:space-between;margin-top:12px;color:var(--muted);font-size:13px}.loadingPercent{font-weight:900;color:var(--text)}.pageFooter{padding:12px 14px;margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
 </style>
+
+<style>
+.chartBox{
+  border:1px solid #d7e5ef;
+  border-radius:14px;
+  padding:10px;
+  background:#fbfeff;
+}
+</style>
 </head>
 <body>
 <div class="loadingOverlay" id="loadingOverlay" aria-live="polite"><div class="loadingPanel"><h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2><p class="loadingSub" id="loadingSub">正在读取目击记录与 Natural Earth 高精度海岸线，请稍候… / Loading sighting records and Natural Earth coastline…</p><div class="loadingBar"><div class="loadingBarFill" id="loadingBarFill"></div></div><div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div></div></div>
@@ -28,6 +37,17 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
   <div class="head"><div class="headTop"><div><h1 id="titleMain">中华白海豚数据库</h1><p class="sub" id="subMain">香港与珠海水域中华白海豚目击记录。</p><p class="note" id="loadNote">—</p></div><button id="langBtn" class="langBtn" type="button">English</button></div></div>
   <div class="layout">
     <aside class="sidebar"><div class="controls">
+<div class="chartBox">
+  <canvas id="popChart" height="180"></canvas>
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+    <label style="font-size:12px;color:#5b7285;">年衰退率 / Decline rate</label>
+    <select id="decayRate" style="padding:4px 8px;border-radius:8px;border:1px solid #d7e5ef;">
+      <option value="2.46">2.46%</option>
+      <option value="3.17">3.17%</option>
+    </select>
+  </div>
+</div>
+
       <div class="rangeBox"><div class="rangeLabel"><span id="yearLabel">年份</span><span class="yearNow" id="yearText">2005</span></div><input id="yearRange" class="range" type="range" min="2005" max="2025" step="1" value="2005"><div class="yearTicks"><span>2005</span><span>2025</span></div></div>
       <div class="filterBox"><div class="rangeLabel"><span id="areaLabel">显示水域</span></div><div class="radioGrid"><label class="radioItem"><input type="checkbox" id="showHK" checked> <span id="showHKText">香港水域</span></label><label class="radioItem"><input type="checkbox" id="showZH" checked> <span id="showZHText">珠海水域</span></label></div></div>
       <div class="filterBox"><div class="rangeLabel"><span id="seasonLabel">季度</span></div><div class="radioGrid"><label class="radioItem"><input type="checkbox" id="showDry" checked> <span id="showDryText">干季</span></label><label class="radioItem"><input type="checkbox" id="showWet" checked> <span id="showWetText">湿季</span></label></div></div>
@@ -104,7 +124,7 @@ function drawHydrology(ctx, proj){
 }
 
 const DEFAULT_EXTENT={minLon:113.38,maxLon:114.55,minLat:21.70,maxLat:22.80};
-const FALLBACK_COAST={mainland:[[[113.38,22.80],[114.55,22.80],[114.55,22.55],[114.44,22.51],[114.35,22.50],[114.25,22.55],[114.16,22.52],[114.05,22.48],[113.94,22.45],[113.84,22.39],[113.77,22.31],[113.69,22.23],[113.60,22.16],[113.50,22.10],[113.38,22.04],[113.38,22.80]]],islands:[[[113.49,22.27],[113.62,22.30],[113.70,22.24],[113.68,22.17],[113.57,22.13],[113.49,22.17],[113.49,22.27]],[[113.80,22.18],[113.92,22.21],[114.03,22.18],[114.10,22.24],[114.18,22.28],[114.26,22.26],[114.30,22.20],[114.25,22.15],[114.13,22.12],[114.02,22.14],[113.90,22.12],[113.82,22.13],[113.80,22.18]],[[113.64,22.06],[113.78,22.08],[113.86,22.04],[113.82,21.97],[113.70,21.95],[113.62,21.99],[113.64,22.06]],[[114.18,22.05],[114.28,22.07],[114.33,22.02],[114.30,21.96],[114.20,21.95],[114.14,22.00],[114.18,22.05]]],labels:[{name:'Humen 虎门',lon:113.647990,lat:22.749890},{name:'Jiaomen 蕉门',lon:113.577827,lat:22.723714},{name:'Hongqimen 洪奇门',lon:113.612457,lat:22.581779},{name:'Hengmen 横门',lon:113.533752,lat: 22.571479},{name:'Modaomen 磨刀门',lon:113.431924,lat:22.160109},{name:'Jitimen 鸡啼门',lon:113.279545,lat: 22.047309},{name:'Hutiaomen 虎跳门',lon:113.129246,lat:22.214449},{name:'Yamen 崖门',lon:113.088601,lat:22.225754},{name:'Zhuhai / 珠海',lon:113.58,lat:22.27},{name:'Hong Kong / 香港',lon:114.14,lat:22.31},{name:'Pearl River Estuary / 珠江口',lon:113.86,lat:22.31}]};
+const FALLBACK_COAST={mainland:[[[113.38,22.80],[114.55,22.80],[114.55,22.55],[114.44,22.51],[114.35,22.50],[114.25,22.55],[114.16,22.52],[114.05,22.48],[113.94,22.45],[113.84,22.39],[113.77,22.31],[113.69,22.23],[113.60,22.16],[113.50,22.10],[113.38,22.04],[113.38,22.80]]],islands:[[[113.49,22.27],[113.62,22.30],[113.70,22.24],[113.68,22.17],[113.57,22.13],[113.49,22.17],[113.49,22.27]],[[113.80,22.18],[113.92,22.21],[114.03,22.18],[114.10,22.24],[114.18,22.28],[114.26,22.26],[114.30,22.20],[114.25,22.15],[114.13,22.12],[114.02,22.14],[113.90,22.12],[113.82,22.13],[113.80,22.18]],[[113.64,22.06],[113.78,22.08],[113.86,22.04],[113.82,21.97],[113.70,21.95],[113.62,21.99],[113.64,22.06]],[[114.18,22.05],[114.28,22.07],[114.33,22.02],[114.30,21.96],[114.20,21.95],[114.14,22.00],[114.18,22.05]]],labels:[{name:'Humen / 虎门口',lon:113.67,lat:22.82},{name:'Jiaomen / 蕉门口',lon:113.55,lat:22.7},{name:'Hongqimen / 洪奇门',lon:113.45,lat:22.55},{name:'Hengmen / 横门口',lon:113.3,lat:22.45},{name:'Modaomen / 磨刀门',lon:113.15,lat:22.3},{name:'Jitimen / 鸡啼门',lon:113.05,lat:22.2},{name:'Hutiaomen / 虎跳门',lon:112.95,lat:22.1},{name:'Yamen / 崖门',lon:113.25,lat:21.95},{name:'Zhuhai / 珠海',lon:113.58,lat:22.27},{name:'Hong Kong / 香港',lon:114.14,lat:22.31},{name:'Pearl River Estuary / 珠江口',lon:113.86,lat:22.31}]};
 
 const HK_ADMIN_BOUNDARY=[
  [113.995056,22.510064],[113.947806,22.472358],[113.869111,22.428806],[113.869111,22.333333],
@@ -500,14 +520,14 @@ function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=
 
 // ===== 八大入海口标注 =====
 const EIGHT_MOUTHS = [
-{name:'Humen 虎门',lon:113.647990,lat:22.749890},
-{name:'Jiaomen 蕉门',lon:113.577827,lat:22.723714},
-{name:'Hongqimen 洪奇门',lon:113.612457,lat:22.581779},
-{name:'Hengmen 横门',lon:113.533752,lat:22.571479},
-{name:'Modaomen 磨刀门',lon:113.431924,lat:22.160109},
-{name:'Jitimen 鸡啼门',lon:113.279545,lat:22.047309},
-{name:'Hutiaomen 虎跳门',lon:113.129246,lat:22.214449},
-{name:'Yamen 崖门',lon:113.088601,lat:22.225754}
+{name:'Humen / 虎门口',lon:113.67,lat:22.82},
+{name:'Jiaomen / 蕉门口',lon:113.55,lat:22.7},
+{name:'Hongqimen / 洪奇门',lon:113.45,lat:22.55},
+{name:'Hengmen / 横门口',lon:113.3,lat:22.45},
+{name:'Modaomen / 磨刀门',lon:113.15,lat:22.3},
+{name:'Jitimen / 鸡啼门',lon:113.05,lat:22.2},
+{name:'Hutiaomen / 虎跳门',lon:112.95,lat:22.1},
+{name:'Yamen / 崖门',lon:113.25,lat:21.95}
 ];
 
 function drawEightMouths(ctx,proj){
@@ -538,14 +558,14 @@ const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineW
 // PEARL RIVER ESTUARY 8 MOUTHS (STABLE FIX)
 // moved to window to avoid TDZ error
 window.PEARL_RIVER_MOUTHS = [
-  {name:'Humen 虎门',lon:113.647990,lat:22.749890},
-{name:'Jiaomen 蕉门',lon:113.577827,lat:22.723714},
-{name:'Hongqimen 洪奇门',lon:113.612457,lat:22.581779},
-{name:'Hengmen 横门',lon:113.533752,lat:22.571479},
-{name:'Modaomen 磨刀门',lon:113.431924,lat:22.160109},
-{name:'Jitimen 鸡啼门',lon:113.279545,lat:22.047309},
-{name:'Hutiaomen 虎跳门',lon:113.129246,lat:22.214449},
-{name:'Yamen 崖门',lon:113.088601,lat:22.225754}
+  {name:"Humen / 虎门口", lon:113.67, lat:22.82},
+  {name:"Jiaomen / 蕉门口", lon:113.55, lat:22.70},
+  {name:"Hongqimen / 洪奇门", lon:113.45, lat:22.55},
+  {name:"Hengmen / 横门口", lon:113.30, lat:22.45},
+  {name:"Modaomen / 磨刀门", lon:113.15, lat:22.30},
+  {name:"Jitimen / 鸡啼门", lon:113.05, lat:22.20},
+  {name:"Hutiaomen / 虎跳门", lon:112.95, lat:22.10},
+  {name:"Yamen / 崖门", lon:113.25, lat:21.95}
 ];
 
 function drawRiverMouths(ctx, proj){
@@ -584,6 +604,99 @@ function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(e
 (async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
 loadHydrology();
 
+</script>
+
+const POP_DATA = [
+{y:2003, zh:1721, hk:158},
+{y:2004, zh:1679, hk:145},
+{y:2005, zh:1637, hk:133},
+{y:2006, zh:1597, hk:122},
+{y:2007, zh:1558, hk:112},
+{y:2008, zh:1519, hk:103},
+{y:2009, zh:1482, hk:95},
+{y:2010, zh:1446, hk:87},
+{y:2011, zh:1410, hk:80},
+{y:2012, zh:1375, hk:73},
+{y:2013, zh:1341, hk:67},
+{y:2014, zh:1308, hk:62},
+{y:2015, zh:1279, hk:57},
+{y:2016, zh:1248, hk:52},
+{y:2017, zh:1217, hk:48},
+{y:2018, zh:1187, hk:44},
+{y:2019, zh:1158, hk:40},
+{y:2020, zh:1129, hk:37},
+{y:2021, zh:1101, hk:34},
+{y:2022, zh:1074, hk:31},
+{y:2023, zh:1039, hk:29},
+{y:2024, zh:1013, hk:26},
+{y:2025, zh:988, hk:24}
+];
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let popChart;
+
+function initChart(){
+  const ctx = document.getElementById('popChart');
+  const labels = POP_DATA.map(d=>d.y);
+  const zh = POP_DATA.map(d=>d.zh);
+  const hk = POP_DATA.map(d=>d.hk);
+
+  popChart = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'珠海', data:zh, borderColor:'#f59e0b', tension:0.2},
+        {label:'香港', data:hk, borderColor:'#0ea5e9', tension:0.2}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:true}},
+      scales:{x:{ticks:{autoSkip:true}}}
+    }
+  });
+}
+
+function highlightYear(y){
+  if(!popChart) return;
+  const idx = POP_DATA.findIndex(d=>d.y==y);
+  if(idx>=0){
+    popChart.setActiveElements([
+      {datasetIndex:0,index:idx},
+      {datasetIndex:1,index:idx}
+    ]);
+    popChart.tooltip.setActiveElements([
+      {datasetIndex:0,index:idx},
+      {datasetIndex:1,index:idx}
+    ],{x:0,y:0});
+    popChart.update();
+  }
+}
+
+function applyDecay(rate){
+  const r = parseFloat(rate)/100;
+  const base = POP_DATA[0].zh;
+  popChart.data.datasets[0].data = POP_DATA.map((d,i)=>Math.round(base*Math.pow(1-r,i)));
+  popChart.update();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  initChart();
+  const slider = document.getElementById('yearRange');
+  const decay = document.getElementById('decayRate');
+
+  slider.addEventListener('input',e=>{
+    highlightYear(parseInt(e.target.value));
+  });
+
+  decay.addEventListener('change',e=>{
+    applyDecay(e.target.value);
+  });
+
+  highlightYear(parseInt(slider.value));
+});
 </script>
 </body>
 </html>
