@@ -31,10 +31,10 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
 
 <div class="filterBox" id="popChartBox">
   <div class="rangeLabel">
-    <span>种群变化</span>
+    <span>种群变化 / Population Trend</span>
     <div>
-      <label><input type="radio" name="decay" value="2.46" checked>2.46%</label>
-      <label><input type="radio" name="decay" value="3.17">3.17%</label>
+      <label><input type="radio" name="decay" value="2.46" checked>2.46%（年衰退率 / decay）</label>
+      <label><input type="radio" name="decay" value="3.17">3.17%（年衰退率 / decay）</label>
     </div>
   </div>
   <canvas id="popChart" width="280" height="160"></canvas>
@@ -615,6 +615,8 @@ function drawChart(){
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
+  const yearIdx = document.getElementById('yearRange') ? parseInt(document.getElementById('yearRange').value)-2005 : 0;
+  const bandX = yearIdx/(25-2005);
 
   const hk = computeSeries(HK_BASE, decayRate);
   const zh = computeSeries(ZH_BASE, decayRate);
