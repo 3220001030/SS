@@ -188,40 +188,6 @@ const MACAU_ADMIN_BOUNDARY=[
 // =========================
 // COASTAL PARKS (YELLOW LAYER)
 // =========================
-
-// =========================
-// ESTUARIES (simple labels only)
-// =========================
-const ESTUARIES = [
-  {name_zh:"虎门", name_en:"Humen", lon:113.64, lat:22.81},
-  {name_zh:"磨刀门", name_en:"Modaomen", lon:113.30, lat:22.05},
-  {name_zh:"蕉门", name_en:"Jiaomen", lon:113.60, lat:22.55},
-  {name_zh:"横门", name_en:"Hengmen", lon:113.55, lat:22.20},
-  {name_zh:"洪奇门", name_en:"Hongqimen", lon:113.50, lat:22.35},
-  {name_zh:"鸡啼门", name_en:"Jitimen", lon:113.45, lat:22.15},
-  {name_zh:"崖门", name_en:"Yamen", lon:113.10, lat:22.25},
-  {name_zh:"伶仃洋", name_en:"Lingdingyang", lon:113.88, lat:22.47}
-];
-
-function drawEstuaries(ctx,proj){
-  ctx.save();
-  ctx.font = "12px sans-serif";
-  ESTUARIES.forEach(p=>{
-    const [x,y]=proj.project(p.lon,p.lat);
-    ctx.beginPath();
-    ctx.arc(x,y,3,0,Math.PI*2);
-    ctx.fillStyle="#ff2d2d";
-    ctx.fill();
-    ctx.strokeStyle="#ffffff";
-    ctx.lineWidth=1;
-    ctx.stroke();
-    const label = (lang==='zh')?p.name_zh:p.name_en;
-    ctx.fillStyle="#10212f";
-    ctx.fillText(label,x+6,y-6);
-  });
-  ctx.restore();
-}
-
 const COASTAL_PARKS = [
   {
     name: "South Lantau Coastal Park",
@@ -456,8 +422,7 @@ function resizeCanvas(){const rect=el.canvas.getBoundingClientRect();const dpr=M
 function baseProjection(){const rect=el.canvas.getBoundingClientRect();const pad=42;const w=rect.width-pad*2,h=rect.height-pad*2;const lonW=maxExtent.maxLon-maxExtent.minLon,latH=maxExtent.maxLat-maxExtent.minLat;const s=Math.min(w/lonW,h/latH)*view.scale;const cx=(maxExtent.minLon+maxExtent.maxLon)/2,cy=(maxExtent.minLat+maxExtent.maxLat)/2;return {project(lon,lat){return [rect.width/2+(lon-cx)*s+view.dx,rect.height/2-(lat-cy)*s+view.dy]},unproject(x,y){return [cx+(x-rect.width/2-view.dx)/s,cy-(y-rect.height/2-view.dy)/s]},s,rect};}
 function pathLine(ctx,line,proj,close=false){let started=false;line.forEach(pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);if(!Number.isFinite(lon)||!Number.isFinite(lat))return;const [x,y]=proj.project(lon,lat);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);});if(started&&close)ctx.closePath();}
 function drawFallbackCoast(ctx,proj){ctx.save();ctx.beginPath();[...FALLBACK_COAST.mainland,...FALLBACK_COAST.islands].forEach(poly=>pathLine(ctx,poly[0]||poly,proj,true));ctx.fillStyle='#eef3e6';ctx.strokeStyle='#9fb091';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();ctx.restore();}
-function drawNaturalEarthCoast(ctx,proj);
-  drawEstuaries(ctx,proj);{if(!coastLines.length){drawFallbackCoast(ctx,proj);return;}ctx.save();ctx.strokeStyle='rgba(36,77,98,.92)';ctx.lineWidth=Math.max(1.05,Math.min(2.2,1.15*view.scale));ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();coastLines.forEach(line=>pathLine(ctx,line,proj,false));ctx.stroke();ctx.restore();}
+function drawNaturalEarthCoast(ctx,proj){if(!coastLines.length){drawFallbackCoast(ctx,proj);return;}ctx.save();ctx.strokeStyle='rgba(36,77,98,.92)';ctx.lineWidth=Math.max(1.05,Math.min(2.2,1.15*view.scale));ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();coastLines.forEach(line=>pathLine(ctx,line,proj,false));ctx.stroke();ctx.restore();}
 
 function drawHKAdminBoundary(ctx,proj){
   if(!Array.isArray(HK_ADMIN_BOUNDARY)||HK_ADMIN_BOUNDARY.length<2)return;
@@ -533,10 +498,43 @@ function geomToPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [ge
 function drawGrid(ctx,proj){const e=maxExtent;ctx.save();ctx.strokeStyle='rgba(51,91,112,.16)';ctx.lineWidth=1;ctx.fillStyle='rgba(91,114,133,.82)';ctx.font='11px sans-serif';for(let lon=Math.ceil(e.minLon*5)/5;lon<=e.maxLon;lon+=0.2){const [x1,y1]=proj.project(lon,e.minLat),[x2,y2]=proj.project(lon,e.maxLat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lon.toFixed(1)+'°E',x1+3,18)}for(let lat=Math.ceil(e.minLat*5)/5;lat<=e.maxLat;lat+=0.2){const [x1,y1]=proj.project(e.minLon,lat),[x2,y2]=proj.project(e.maxLon,lat);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillText(lat.toFixed(1)+'°N',8,y1-3)}ctx.restore();}
 function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=>{const geom=obj.feature.geometry;if(!geom)return;const polys=geomToPolys(geom);const isHK=obj.region==='hk';ctx.save();ctx.beginPath();polys.forEach(poly=>{if(geom.type.includes('Line'))pathLine(ctx,poly,proj,false);else if(Array.isArray(poly)&&Array.isArray(poly[0]))pathLine(ctx,poly[0],proj,true);});ctx.fillStyle=isHK?'rgba(14,165,233,.38)':'rgba(245,158,11,.40)';ctx.strokeStyle=isHK?'rgba(2,132,199,.98)':'rgba(217,119,6,.98)';ctx.lineWidth=Math.max(1.2,Math.min(3,1.7*view.scale));ctx.fill();ctx.stroke();ctx.restore();});return {feats};}
 function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);
-  drawEstuaries(ctx,proj);;
 drawHydrology(ctx,proj);
 const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
-  drawCoastalParks(ctx,proj);updateInfo(info);}
+  drawCoastalParks(ctx,proj);
+// =========================
+// PEARL RIVER ESTUARY 8 MOUTHS (ADDED)
+// =========================
+const PEARL_RIVER_MOUTHS = [
+  {name:"Humen", lon:113.67, lat:22.82},
+  {name:"Jiaomen", lon:113.57, lat:22.73},
+  {name:"Hongqili", lon:113.50, lat:22.65},
+  {name:"Modaomen", lon:113.42, lat:22.50},
+  {name:"Huangmaohai", lon:113.35, lat:22.42},
+  {name:"Baimaohai", lon:113.28, lat:22.38},
+  {name:"Lingdingyang", lon:113.90, lat:22.30},
+  {name:"West Channel", lon:113.95, lat:22.45}
+];
+
+function drawRiverMouths(ctx, proj){
+  ctx.save();
+  PEARL_RIVER_MOUTHS.forEach(p=>{
+    const [x,y]=proj.project(p.lon,p.lat);
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,0,0,0.75)";
+    ctx.fill();
+    ctx.strokeStyle="#ffffff";
+    ctx.lineWidth=1;
+    ctx.stroke();
+
+    ctx.fillStyle="#b91c1c";
+    ctx.font="11px sans-serif";
+    ctx.fillText(p.name,x+6,y-6);
+  });
+  ctx.restore();
+}
+
+updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
 function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
 
