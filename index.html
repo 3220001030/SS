@@ -500,14 +500,14 @@ function drawFeatures(ctx,proj){const feats=currentFeatures();feats.forEach(obj=
 
 // ===== 八大入海口标注 =====
 const EIGHT_MOUTHS = [
-{name:'Humen / 虎门口',lon:113.67,lat:22.82},
-{name:'Jiaomen / 蕉门口',lon:113.55,lat:22.7},
-{name:'Hongqimen / 洪奇门',lon:113.45,lat:22.55},
-{name:'Hengmen / 横门口',lon:113.3,lat:22.45},
-{name:'Modaomen / 磨刀门',lon:113.15,lat:22.3},
-{name:'Jitimen / 鸡啼门',lon:113.05,lat:22.2},
-{name:'Hutiaomen / 虎跳门',lon:112.95,lat:22.1},
-{name:'Yamen / 崖门',lon:113.25,lat:21.95}
+{name:'Humen 虎门',lon:113.647990,lat:22.749890},
+{name:'Jiaomen 蕉门',lon:113.577827,lat:22.723714},
+{name:'Hongqimen 洪奇门',lon:113.612457,lat:22.581779},
+{name:'Hengmen 横门',lon:113.533752,lat:22.571479},
+{name:'Modaomen 磨刀门',lon:113.431924,lat:22.160109},
+{name:'Jitimen 鸡啼门',lon:113.279545,lat:22.047309},
+{name:'Hutiaomen 虎跳门',lon:113.129246,lat:22.214449},
+{name:'Yamen 崖门',lon:113.088601,lat:22.225754}
 ];
 
 function drawEightMouths(ctx,proj){
@@ -538,14 +538,14 @@ const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineW
 // PEARL RIVER ESTUARY 8 MOUTHS (STABLE FIX)
 // moved to window to avoid TDZ error
 window.PEARL_RIVER_MOUTHS = [
-  {name:"Humen / 虎门口", lon:113.67, lat:22.82},
-  {name:"Jiaomen / 蕉门口", lon:113.55, lat:22.70},
-  {name:"Hongqimen / 洪奇门", lon:113.45, lat:22.55},
-  {name:"Hengmen / 横门口", lon:113.30, lat:22.45},
-  {name:"Modaomen / 磨刀门", lon:113.15, lat:22.30},
-  {name:"Jitimen / 鸡啼门", lon:113.05, lat:22.20},
-  {name:"Hutiaomen / 虎跳门", lon:112.95, lat:22.10},
-  {name:"Yamen / 崖门", lon:113.25, lat:21.95}
+  {name:'Humen 虎门',lon:113.647990,lat:22.749890},
+{name:'Jiaomen 蕉门',lon:113.577827,lat:22.723714},
+{name:'Hongqimen 洪奇门',lon:113.612457,lat:22.581779},
+{name:'Hengmen 横门',lon:113.533752,lat:22.571479},
+{name:'Modaomen 磨刀门',lon:113.431924,lat:22.160109},
+{name:'Jitimen 鸡啼门',lon:113.279545,lat:22.047309},
+{name:'Hutiaomen 虎跳门',lon:113.129246,lat:22.214449},
+{name:'Yamen 崖门',lon:113.088601,lat:22.225754}
 ];
 
 function drawRiverMouths(ctx, proj){
