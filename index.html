@@ -282,69 +282,6 @@ function makeZip(files){let local='',central='',offset=0;files.forEach(file=>{co
 function downloadAllJson(){if(!records.length){alert(T().downloadEmpty);return;}const files=records.map(r=>({name:r.label,geo:r.geo}));const blob=makeZip(files);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chinese_white_dolphin_sighting_geojson.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;draw();});[el.showHK,el.showZH,el.showDry,el.showWet].forEach(x=>x.addEventListener('change',draw));el.downloadAllBtn.addEventListener('click',downloadAllJson);if(el.mapTabBtn)el.mapTabBtn.addEventListener('click',()=>setMainPanel('map'));if(el.refTabBtn)el.refTabBtn.addEventListener('click',()=>setMainPanel('ref'));el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw();},{passive:false});window.addEventListener('resize',draw);}
 (async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
-
-// ===== MSPI MOD: 三区划分（严格连点成线） =====
-
-// 实验区：矩形
-const EXPERIMENT_ZONE = [
-  [113.40,22.11],
-  [113.43,22.11],
-  [113.43,22.24],
-  [113.40,22.24],
-  [113.40,22.11]
-];
-
-// 核心区：HK左边界 + 113.46E垂线封闭（简化实现）
-const CORE_ZONE = [
-  [113.46,22.13],
-  [113.46,22.22],
-  [113.995056,22.510064], // HK boundary top anchor
-  [113.869111,22.428806],
-  [113.869111,22.333333],
-  [113.847389,22.273111],
-  [113.839000,22.267722],
-  [113.826389,22.239278],
-  [113.817111,22.217056],
-  [113.832389,22.183861],
-  [113.896556,22.142528],
-  [113.922389,22.136722],
-  [113.939556,22.148472],
-  [113.46,22.13] // close
-];
-
-function drawMSPIZones(ctx, proj){
-  ctx.save();
-
-  // experimental zone
-  ctx.beginPath();
-  pathLine(ctx, EXPERIMENT_ZONE, proj, true);
-  ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
-  ctx.strokeStyle = "#f59e0b";
-  ctx.lineWidth = 2;
-  ctx.fill();
-  ctx.stroke();
-
-  // core zone
-  ctx.beginPath();
-  pathLine(ctx, CORE_ZONE, proj, true);
-  ctx.fillStyle = "rgba(239, 68, 68, 0.18)";
-  ctx.strokeStyle = "#ef4444";
-  ctx.lineWidth = 2.2;
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-// override draw() injection hook
-const _oldDraw = draw;
-draw = function(){
-  _oldDraw();
-  const ctx = el.canvas.getContext('2d');
-  const proj = baseProjection();
-  drawMSPIZones(ctx, proj);
-};
-
 </script>
 </body>
 </html>
