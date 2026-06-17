@@ -44,7 +44,112 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
   <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
 </div>
 <script>
-const I18N={zh:{title:'中华白海豚数据库',sub:'香港与珠海水域中华白海豚目击记录。',langBtn:'English',year:'年份',area:'显示水域',hk:'香港水域',zh:'珠海水域',season:'季度',dry:'干季',wet:'湿季',downloadAll:'一键下载全部 JSON',view:'视图',reset:'回到最大地理范围',zin:'放大',zout:'缩小',mapTitle:'目击记录地图',mapSub:'',mapTab:'地图',refTab:'参考文献',refHeading:'参考文献',refZh:'珠海水域',refHk:'香港水域',legend:'图例',hkLegend:'香港 GeoJSON',zhLegend:'珠海 GeoJSON',coast:'海岸线',hkAdmin:'香港行政边界',macauAdmin:'澳门行政边界',reserveBoundary:'实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer',max:'最大地理范围',loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,sum1:'当前年份',sum2:'当前显示要素',sum3:'最大地理范围',extent:'经度 / 纬度范围',noData:'当前年份没有加载到可显示的 GeoJSON。',matched:'当前年份命中文件',substitute:'珠海 2009–2014 使用 2005–2008 数据代替',futureSubstitute:'2024–2025 使用此前最近年份（2023）数据代替',downloadEmpty:'暂无可下载的 JSON 文件。',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m 在线海岸线',coastFallback:'内置备用海岸线'},en:{title:'Chinese White Dolphin Database',sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',langBtn:'中文',year:'Year',area:'Waters',hk:'Hong Kong waters',zh:'Zhuhai waters',season:'Season',dry:'Dry season',wet:'Wet season',downloadAll:'Download all JSON',view:'View',reset:'Reset to maximum extent',zin:'Zoom in',zout:'Zoom out',mapTitle:'Sighting map',mapSub:'',mapTab:'Map',refTab:'References',refHeading:'References',refZh:'Zhuhai waters',refHk:'Hong Kong waters',legend:'Legend',hkLegend:'Hong Kong GeoJSON',zhLegend:'Zhuhai GeoJSON',coast:'Coastline',hkAdmin:'Hong Kong administrative boundary',macauAdmin:'Macao administrative boundary',reserveBoundary:'Pearl River Estuary CWD National Nature Reserve boundary',max:'Maximum extent',loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,sum1:'Selected year',sum2:'Visible features',sum3:'Maximum extent',extent:'Longitude / latitude range',noData:'No displayable GeoJSON was loaded for this year.',matched:'Matched files',substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',futureSubstitute:'2024–2025 uses the nearest previous year (2023) as substitute',downloadEmpty:'No loaded JSON files are available for download.',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m online coastline',coastFallback:'Built-in fallback coastline'}};
+
+
+const I18N={
+zh:{
+title:'中华白海豚数据库',
+sub:'香港与珠海水域中华白海豚目击记录。',
+langBtn:'English',
+year:'年份',
+area:'显示水域',
+hk:'香港水域',
+zh:'珠海水域',
+season:'季度',
+dry:'干季',
+wet:'湿季',
+downloadAll:'一键下载全部 JSON',
+view:'视图',
+reset:'回到最大地理范围',
+zin:'放大',
+zout:'缩小',
+mapTitle:'目击记录地图',
+mapSub:'',
+mapTab:'地图',
+refTab:'参考文献',
+refHeading:'参考文献',
+
+// ✅ 按新分类对齐
+refZh:'白海豚相关资料（珠海 + 香港 + 保护区/海岸公园）',
+refHk:'分类说明（目击记录 / 行政边界 / 保护区界线）',
+
+legend:'图例',
+hkLegend:'香港目击',
+zhLegend:'珠海目击',
+coast:'海岸线',
+hkAdmin:'香港行政边界',
+macauAdmin:'澳门行政边界',
+reserveBoundary:'实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer',
+max:'最大地理范围',
+
+loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,
+diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,
+sum1:'当前年份',
+sum2:'当前显示要素',
+sum3:'最大地理范围',
+extent:'经度 / 纬度范围',
+noData:'当前年份没有加载到可显示的 GeoJSON。',
+matched:'当前年份命中文件',
+substitute:'珠海 2009–2014 使用 2005–2008 数据代替',
+futureSubstitute:'2024–2025 使用此前最近年份（2023）数据代替',
+downloadEmpty:'暂无可下载的 JSON 文件。',
+loadingDone:'加载完成 / Completed',
+coastOnline:'Natural Earth 10m 在线海岸线',
+coastFallback:'内置备用海岸线'
+},
+
+en:{
+title:'Chinese White Dolphin Database',
+sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',
+langBtn:'中文',
+year:'Year',
+area:'Waters',
+hk:'Hong Kong waters',
+zh:'Zhuhai waters',
+season:'Season',
+dry:'Dry season',
+wet:'Wet season',
+downloadAll:'Download all JSON',
+view:'View',
+reset:'Reset to maximum extent',
+zin:'Zoom in',
+zout:'Zoom out',
+mapTitle:'Sighting map',
+mapSub:'',
+mapTab:'Map',
+refTab:'References',
+refHeading:'References',
+
+// ✅ English 对齐分类
+refZh:'Dolphin-related sources (Zhuhai + Hong Kong + protected areas)',
+refHk:'Categorized references (sightings / administrative boundaries / marine parks)',
+
+legend:'Legend',
+hkLegend:'Hong Kong sighting',
+zhLegend:'Zhuhai sighting',
+coast:'Coastline',
+hkAdmin:'Hong Kong administrative boundary',
+macauAdmin:'Macao administrative boundary',
+reserveBoundary:'Pearl River Estuary CWD National Nature Reserve boundary',
+
+max:'Maximum extent',
+loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,
+diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,
+sum1:'Selected year',
+sum2:'Visible features',
+sum3:'Maximum extent',
+extent:'Longitude / latitude range',
+noData:'No displayable GeoJSON was loaded for this year.',
+matched:'Matched files',
+substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',
+futureSubstitute:'2024–2025 uses the nearest previous year (2023) as substitute',
+downloadEmpty:'No loaded JSON files are available for download.',
+loadingDone:'加载完成 / Completed',
+coastOnline:'Natural Earth 10m online coastline',
+coastFallback:'Built-in fallback coastline'
+}
+};
+  
 let lang=localStorage.getItem('cwd_lang')||'zh';
 const YEARS=Array.from({length:21},(_,i)=>2005+i);
 const HK_FILES=YEARS.map(y=>({region:'hk',season:'all',start:y,end:y,label:`hk_${y}.geojson`,paths:[`./sighting/hk/hk_${y}.geojson`,`./hk_${y}.geojson`]}));
