@@ -13,7 +13,7 @@ gdf10 = gpd.read_file(gdb, layer="level_10")
 
 basins = pd.concat([gdf9, gdf10], ignore_index=True)
 basins = gpd.GeoDataFrame(basins).to_crs("EPSG:4326")
-basins = basins.cx[112.0:114.8, 21.0:23.5]
+basins = basins.cx[111.0:114.5, 21.0:25.5]
 
 basins["Basin_ID"] = pd.to_numeric(basins["Basin_ID"], errors="coerce").astype("Int64")
 basins["Down_ID"] = pd.to_numeric(basins["Down_ID"], errors="coerce").fillna(0).astype("Int64")
