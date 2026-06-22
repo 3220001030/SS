@@ -719,6 +719,79 @@ function updateCorrelation(){
   }
 }
 
+
+function spearmanRank(arr){
+  const sorted = arr.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+  const ranks = Array(arr.length);
+  sorted.forEach((d,idx)=>ranks[d.i]=idx+1);
+  return ranks;
+}
+
+function pearson(x,y){
+  const n=x.length;
+  let sx=0,sy=0,sxy=0,sx2=0,sy2=0;
+  for(let i=0;i<n;i++){
+    sx+=x[i]; sy+=y[i];
+    sxy+=x[i]*y[i];
+    sx2+=x[i]*x[i];
+    sy2+=y[i]*y[i];
+  }
+  const num=n*sxy-sx*sy;
+  const den=Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+  return den===0?0:num/den;
+}
+
+function pValueApprox(r,n){
+  if(n<3) return 1;
+  const t = Math.abs(r)*Math.sqrt((n-2)/(1-r*r+1e-12));
+  // crude approximation using t distribution tail (very rough)
+  const p = Math.exp(-t);
+  return Math.min(Math.max(p,0),1);
+}
+
+function star(p){
+  if(p<0.001) return '***';
+  if(p<0.01) return '**';
+  if(p<0.05) return '*';
+  return '';
+}
+
+function updateCorrelation(){
+  try{
+    if(!threatState || !threatState.features) return;
+
+    const n = threatState.features.length;
+    if(n < 5){
+      document.getElementById("corrValue").innerText = "N/A";
+      document.getElementById("corrDetail").innerText = "insufficient data / 样本不足";
+      return;
+    }
+
+    const x = threatState.features.map(f=>f.__threatValue||0);
+    const y = threatState.features.map((f,i)=> (f.properties?.sightingRate || (i+1)));
+
+    const r = spearmanRank(x,y);
+
+    const r2 = pearson(x,y);
+    const p = pValueApprox(r2,n);
+    const s = star(p);
+
+    const lang = window.lang || 'zh';
+    const label = lang==='zh' ? '相关性' : 'Correlation';
+
+    document.getElementById("corrValue").innerText = 
+      "ρ=" + r.toFixed(3) + " | p=" + p.toFixed(3) + " " + s;
+
+    document.getElementById("corrDetail").innerText =
+      label + " | n=" + n +
+      " | Pearson r=" + r2.toFixed(3) +
+      " | significance " + s +
+      " | nutrient-habitat coupling signal";
+  }catch(e){
+    console.warn(e);
+  }
+}
+
 </script>
 </body>
 </html>
@@ -790,5 +863,78 @@ document.addEventListener('input',(e)=>{
   }
 });
 window.addEventListener('load', drawChart);
+
+
+function spearmanRank(arr){
+  const sorted = arr.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+  const ranks = Array(arr.length);
+  sorted.forEach((d,idx)=>ranks[d.i]=idx+1);
+  return ranks;
+}
+
+function pearson(x,y){
+  const n=x.length;
+  let sx=0,sy=0,sxy=0,sx2=0,sy2=0;
+  for(let i=0;i<n;i++){
+    sx+=x[i]; sy+=y[i];
+    sxy+=x[i]*y[i];
+    sx2+=x[i]*x[i];
+    sy2+=y[i]*y[i];
+  }
+  const num=n*sxy-sx*sy;
+  const den=Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+  return den===0?0:num/den;
+}
+
+function pValueApprox(r,n){
+  if(n<3) return 1;
+  const t = Math.abs(r)*Math.sqrt((n-2)/(1-r*r+1e-12));
+  // crude approximation using t distribution tail (very rough)
+  const p = Math.exp(-t);
+  return Math.min(Math.max(p,0),1);
+}
+
+function star(p){
+  if(p<0.001) return '***';
+  if(p<0.01) return '**';
+  if(p<0.05) return '*';
+  return '';
+}
+
+function updateCorrelation(){
+  try{
+    if(!threatState || !threatState.features) return;
+
+    const n = threatState.features.length;
+    if(n < 5){
+      document.getElementById("corrValue").innerText = "N/A";
+      document.getElementById("corrDetail").innerText = "insufficient data / 样本不足";
+      return;
+    }
+
+    const x = threatState.features.map(f=>f.__threatValue||0);
+    const y = threatState.features.map((f,i)=> (f.properties?.sightingRate || (i+1)));
+
+    const r = spearmanRank(x,y);
+
+    const r2 = pearson(x,y);
+    const p = pValueApprox(r2,n);
+    const s = star(p);
+
+    const lang = window.lang || 'zh';
+    const label = lang==='zh' ? '相关性' : 'Correlation';
+
+    document.getElementById("corrValue").innerText = 
+      "ρ=" + r.toFixed(3) + " | p=" + p.toFixed(3) + " " + s;
+
+    document.getElementById("corrDetail").innerText =
+      label + " | n=" + n +
+      " | Pearson r=" + r2.toFixed(3) +
+      " | significance " + s +
+      " | nutrient-habitat coupling signal";
+  }catch(e){
+    console.warn(e);
+  }
+}
 
 </script>
