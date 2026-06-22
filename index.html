@@ -736,4 +736,92 @@ document.addEventListener('input',(e)=>{
 });
 window.addEventListener('load', drawChart);
 
+
+// ===============================
+// Bivariate Moran X-Y Module (FIXED)
+// ===============================
+let bivarResult = null;
+
+function getSightingsForYear(year){
+  // load HK + ZH for year
+  const urls = [];
+  HK_FILES.forEach(f=>{
+    if(f.start<=year && f.end>=year) urls.push(f.paths[0]);
+  });
+  ZH_FILES.forEach(f=>{
+    if(year>=f.start && year<=f.end) urls.push(f.paths[0]);
+  });
+  return Promise.all(urls.map(u=>fetch(u).then(r=>r.json()).catch(()=>null)));
+}
+
+function buildGrid(points, res=0.02){
+  const grid = new Map();
+  const key = (x,y)=>`${Math.floor(x/res)}_${Math.floor(y/res)}`;
+  points.forEach(p=>{
+    const [x,y]=p;
+    const k=key(x,y);
+    grid.set(k,(grid.get(k)||0)+1);
+  });
+  return grid;
+}
+
+function extractPoints(geo){
+  const pts=[];
+  (geo.features||[]).forEach(f=>{
+    const g=f.geometry;
+    if(!g) return;
+    if(g.type==="Point") pts.push(g.coordinates);
+    else if(g.type==="MultiPoint") pts.push(...g.coordinates);
+  });
+  return pts;
+}
+
+function computeBivariateMoran(){
+  const year = selectedYear;
+  Promise.all([getSightingsForYear(year)]).then(res=>{
+    let sightings=[];
+    res[0].forEach(g=>{
+      if(g) sightings.push(...extractPoints(g));
+    });
+
+    const X = buildGrid(sightings);
+
+    const Y = new Map();
+    if(threatState && threatState.features){
+      threatState.features.forEach(f=>{
+        const c=f.geometry?.coordinates;
+        if(!c) return;
+        const key = `${Math.floor(c[0]/0.02)}_${Math.floor(c[1]/0.02)}`;
+        Y.set(key, (Y.get(key)||0)+ (f.__threatValue||0));
+      });
+    }
+
+    const keys = new Set([...X.keys(),...Y.keys()]);
+    const xArr=[], yArr=[];
+    keys.forEach(k=>{
+      xArr.push(X.get(k)||0);
+      yArr.push(Y.get(k)||0);
+    });
+
+    const n=xArr.length;
+    const mx=xArr.reduce((a,b)=>a+b,0)/n;
+    const my=yArr.reduce((a,b)=>a+b,0)/n;
+
+    let num=0;
+    for(let i=0;i<n;i++){
+      num += (xArr[i]-mx)*(yArr[i]-my);
+    }
+
+    const vx=Math.sqrt(xArr.reduce((s,v)=>s+Math.pow(v-mx,2),0));
+    const vy=Math.sqrt(yArr.reduce((s,v)=>s+Math.pow(v-my,2),0));
+
+    const I = (n*num)/(vx*vy||1);
+
+    bivarResult = {I};
+
+    alert("Bivariate Moran I = " + I.toFixed(4));
+  });
+}
+
+document.getElementById('basinTopoBtn')?.addEventListener('click', computeBivariateMoran);
 </script>
