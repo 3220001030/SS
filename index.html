@@ -751,6 +751,40 @@ function __getSigStars(p){
 })();
 </script>
 
+
+<script>
+// ===== Significance directly appended to coefficient =====
+function __sig(p){
+  if(p === undefined || p === null || isNaN(p)) return "";
+  if(p < 0.001) return "***";
+  if(p < 0.01) return "**";
+  if(p < 0.05) return "*";
+  return "";
+}
+
+(function(){
+  const el = document.getElementById("corrValue");
+  if(!el) return;
+
+  const observer = new MutationObserver(() => {
+    const raw = el.textContent || "";
+    const p = window.corrP;
+
+    // avoid double append by stripping existing stars
+    const base = raw.replace(/\s*\*{1,3}$/, "");
+    const sig = __sig(p);
+
+    if(sig){
+      el.textContent = base + " " + sig;
+    } else {
+      el.textContent = base;
+    }
+  });
+
+  observer.observe(el, {childList:true, characterData:true, subtree:true});
+})();
+</script>
+
 </body>
 </html>
 
