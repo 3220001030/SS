@@ -52,7 +52,16 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
     <main class="main">
       <div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
       <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><button id="mapTabBtn" class="tabBtn active" type="button">地图</button><button id="refTabBtn" class="tabBtn" type="button">参考文献</button><button id="basinTopoBtn" class="tabBtn" type="button">流域拓扑</button><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div id="mapView" class="panelView active"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas><div id="threatLayerProgress" class="threatLayerProgress hidden"><div class="threatLayerProgressTitle" id="threatLayerProgressTitle">威胁图层加载中</div><div class="threatLayerBar"><div id="threatLayerBarFill" class="threatLayerBarFill"></div></div><div class="threatLayerProgressMeta"><span id="threatLayerProgressStatus">Preparing…</span><span id="threatLayerProgressPercent">0%</span></div></div><div id="threatLegendBox" class="threatLegendBox hidden"><div class="threatLegendTitle" id="threatLegendTitle">—</div><div class="threatColorBar"></div><div class="threatLegendScale"><span id="threatLegendMin">Low</span><span id="threatLegendMax">High</span></div><div class="threatLegendNote" id="threatLegendNote"></div></div></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #22c55e;border-radius:0"></span><span id="macauAdminLegend">澳门行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px solid #8b5cf6;border-radius:0"></span><span id="reserveLegend">实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer</span></span></div></div><div id="refView" class="panelView"><div class="referenceWrap"><h2 class="refHeading" id="refHeading">参考文献</h2><div id="referenceList"></div></div></div></div></section>
-      <div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
+      
+<div class="summaryGrid" id="corrBox" style="margin-bottom:12px;">
+  <section class="summaryCard">
+    <h3>白海豚目击 × 因子相关性 / Correlation</h3>
+    <div class="bigNum" id="corrValue">—</div>
+    <div class="list" id="corrDetail">等待数据加载 / Waiting for data</div>
+  </section>
+</div>
+
+<div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
     </main>
   </div>
   <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
@@ -114,13 +123,13 @@ function threatPaths(f,year){const names=[f.code,...(f.aliases||[])];const seen=
 function renderThreatControls(){const grid=document.getElementById('threatGrid');if(!grid)return;grid.innerHTML=THREAT_FACTORS.map(f=>`<label class="radioItem"><input type="checkbox" name="threatFactor" value="${esc(f.code)}"> <span data-threat-label="${esc(f.code)}">${esc(threatLabel(f))}</span></label>`).join('');grid.querySelectorAll('input[name="threatFactor"]').forEach(input=>{input.checked=selectedThreat===input.value;input.addEventListener('change',onThreatChange)});}
 function onThreatChange(e){const v=e.target.value;if(e.target.checked){selectedThreat=v;document.querySelectorAll('input[name="threatFactor"]').forEach(x=>{if(x!==e.target)x.checked=false;});loadSelectedThreatLayer();}else{selectedThreat=null;clearThreatLayer();}}
 function setThreatProgress(show,p,status){const box=document.getElementById('threatLayerProgress'),fill=document.getElementById('threatLayerBarFill'),pct=document.getElementById('threatLayerProgressPercent'),st=document.getElementById('threatLayerProgressStatus'),title=document.getElementById('threatLayerProgressTitle');if(!box)return;box.classList.toggle('hidden',!show);if(title)title.textContent=T().threatLoading;if(fill)fill.style.width=Math.max(0,Math.min(100,p||0))+'%';if(pct)pct.textContent=Math.max(0,Math.min(100,p||0)).toFixed(0)+'%';if(st)st.textContent=status||'';}
-function clearThreatLayer(){threatState={key:'',factor:null,geo:null,features:[],min:null,max:null,valueField:null,noNumeric:false,error:''};document.getElementById('threatLegendBox')?.classList.add('hidden');setThreatProgress(false,0,'');draw();}
+function clearThreatLayer(){threatState={key:'',factor:null,geo:null,features:[],min:null,max:null,valueField:null,noNumeric:false,error:''};document.getElementById('threatLegendBox')?.classList.add('hidden');setThreatProgress(false,0,'');draw(); updateCorrelation();}
 async function fetchThreatWithProgress(paths,onProgress){let lastErr=null;for(const path of paths){try{onProgress(8,`Loading ${path}`);const r=await fetch(path,{cache:'no-store'});if(!r.ok){lastErr=new Error(`${r.status} ${path}`);continue;}const total=Number(r.headers.get('content-length')||0);if(r.body&&r.body.getReader){const reader=r.body.getReader();let received=0,chunks=[];while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);received+=value.length;if(total)onProgress(10+Math.min(78,received/total*78),`Loading ${path}`);}const blob=new Blob(chunks);const text=await blob.text();onProgress(92,'Parsing GeoJSON…');return {path,json:JSON.parse(text)};}else{const json=await r.json();onProgress(92,'Parsing GeoJSON…');return {path,json};}
 }catch(e){lastErr=e;}}
 throw lastErr||new Error('Threat layer not found');}
 function threatNumericValue(props,f){props=props||{};const candidates=[f.code,...(f.aliases||[]),'value','VALUE','val','Val','mean','MEAN','grid_code','GRID_CODE','conc','CONC','density','Density'];for(const k of candidates){if(Object.prototype.hasOwnProperty.call(props,k)){const n=Number(String(props[k]).replace(/,/g,''));if(Number.isFinite(n))return {value:n,field:k};}}for(const [k,v] of Object.entries(props)){if(/^(id|fid|gid|year|name|label|date|objectid|shape)/i.test(k))continue;const n=Number(String(v).replace(/,/g,''));if(Number.isFinite(n))return {value:n,field:k};}return {value:NaN,field:null};}
 function prepareThreatState(f,geo,path){geo=normalizeGeoJSON(geo);if(!geo||geo.type!=='FeatureCollection'||!Array.isArray(geo.features))throw new Error('Invalid GeoJSON FeatureCollection');let vals=[],field=null;geo.features.forEach((feat,i)=>{const got=threatNumericValue(feat.properties,f);let v=got.value;if(!Number.isFinite(v))v=i+1;else if(!field&&got.field)field=got.field;feat.__threatValue=v;vals.push(v);});const numeric=!!field;let min=Math.min(...vals),max=Math.max(...vals);if(!Number.isFinite(min)||!Number.isFinite(max)){min=0;max=1}if(min===max){min=min-0.5;max=max+0.5}return {key:`${f.code}_${selectedYear}`,factor:f,geo,path,features:geo.features,min,max,valueField:field,noNumeric:!numeric,error:''};}
-async function loadSelectedThreatLayer(){if(!selectedThreat){clearThreatLayer();return;}const seq=++threatRequestSeq;const f=THREAT_FACTORS.find(x=>x.code===selectedThreat);if(!f)return;const year=selectedYear;const key=`${f.code}_${year}`;if(threatCache.has(key)){threatState=threatCache.get(key);updateThreatLegend();draw();return;}try{setThreatProgress(true,2,`Preparing ${f.code}_${year}.geojson`);const got=await fetchThreatWithProgress(threatPaths(f,year),(p,s)=>{if(seq===threatRequestSeq)setThreatProgress(true,p,s)});if(seq!==threatRequestSeq)return;const state=prepareThreatState(f,got.json,got.path);threatCache.set(key,state);threatState=state;setThreatProgress(true,100,'Completed');setTimeout(()=>{if(seq===threatRequestSeq)setThreatProgress(false,0,'')},350);updateThreatLegend();draw();}catch(e){if(seq!==threatRequestSeq)return;threatState={key,factor:f,geo:null,features:[],min:null,max:null,valueField:null,noNumeric:false,error:e.message};setThreatProgress(false,0,'');updateThreatLegend();draw();}}
+async function loadSelectedThreatLayer(){if(!selectedThreat){clearThreatLayer();return;}const seq=++threatRequestSeq;const f=THREAT_FACTORS.find(x=>x.code===selectedThreat);if(!f)return;const year=selectedYear;const key=`${f.code}_${year}`;if(threatCache.has(key)){threatState=threatCache.get(key);updateThreatLegend();draw(); updateCorrelation();return;}try{setThreatProgress(true,2,`Preparing ${f.code}_${year}.geojson`);const got=await fetchThreatWithProgress(threatPaths(f,year),(p,s)=>{if(seq===threatRequestSeq)setThreatProgress(true,p,s)});if(seq!==threatRequestSeq)return;const state=prepareThreatState(f,got.json,got.path);threatCache.set(key,state);threatState=state;setThreatProgress(true,100,'Completed');setTimeout(()=>{if(seq===threatRequestSeq)setThreatProgress(false,0,'')},350);updateThreatLegend();draw(); updateCorrelation();}catch(e){if(seq!==threatRequestSeq)return;threatState={key,factor:f,geo:null,features:[],min:null,max:null,valueField:null,noNumeric:false,error:e.message};setThreatProgress(false,0,'');updateThreatLegend();draw(); updateCorrelation();}}
 function threatColor(value,min,max){const t=Math.max(0,Math.min(1,(value-min)/(max-min||1)));const stops=[[239,246,255],[147,197,253],[34,197,94],[250,204,21],[239,68,68]];const x=t*(stops.length-1),i=Math.min(stops.length-2,Math.floor(x)),r=x-i;const a=stops[i],b=stops[i+1];const c=a.map((v,j)=>Math.round(v+(b[j]-v)*r));return `rgba(${c[0]},${c[1]},${c[2]},0.55)`;}
 function fmtThreatNum(n){if(!Number.isFinite(n))return '—';const a=Math.abs(n);return a>=100?String(Math.round(n)):a>=10?n.toFixed(1):n.toFixed(2);}
 function updateThreatLegend(){const box=document.getElementById('threatLegendBox'),title=document.getElementById('threatLegendTitle'),minEl=document.getElementById('threatLegendMin'),maxEl=document.getElementById('threatLegendMax'),note=document.getElementById('threatLegendNote');if(!box)return;if(!selectedThreat||!threatState.factor){box.classList.add('hidden');return;}box.classList.remove('hidden');title.textContent=`${threatLabel(threatState.factor)} · ${selectedYear}`;if(threatState.error){minEl.textContent='—';maxEl.textContent='—';note.textContent=`GeoJSON not found: threats/${threatState.factor.code}_${selectedYear}.geojson`;return;}minEl.textContent=fmtThreatNum(threatState.min);maxEl.textContent=fmtThreatNum(threatState.max);const unit=(THREAT_UNITS&&threatState.factor&&THREAT_UNITS[threatState.factor.code])||'';
@@ -491,7 +500,7 @@ async function loadNaturalEarthLand(){for(const url of NATURAL_EARTH_LAND_URLS){
 async function loadNaturalEarthCoast(){for(const url of NATURAL_EARTH_COAST_URLS){try{setProgress(86,'读取 Natural Earth 10m 海岸线 / Loading coastline…');const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const lines=[];(geo.features||[]).forEach(f=>geometryToLines(f.geometry).forEach(line=>{if(Array.isArray(line)&&line.length>1&&bboxIntersectsLine(line,DEFAULT_EXTENT,1.0))lines.push(line)}));if(lines.length){coastLines=lines;coastStatus=T().coastOnline;return true;}}catch(e){}}coastLines=[];coastStatus=T().coastFallback;return false;}
 async function loadAll(){setProgress(5,'准备中 / Preparing…');let unionB=null;for(let i=0;i<FILES.length;i++){const spec=FILES[i];setProgress(5+76*(i/FILES.length),`读取 ${spec.label}`);const got=await fetchFirst(spec.paths);diagnostics.miss+=got.missed;if(!got.json){diagnostics.miss++;continue}try{const geo=normalizeGeoJSON(got.json);if(!geo)throw new Error('Not FeatureCollection');const b=getBounds(geo.features);records.push({...spec,path:got.path,geo,b,features:geo.features});diagnostics.ok++;if(b)unionB=unionB?union(unionB,b):b;}catch(e){diagnostics.err++;}}
 maxExtent=padExtent(unionB?union(unionB,DEFAULT_EXTENT):DEFAULT_EXTENT,0.03);await loadNaturalEarthCoast();await loadNaturalEarthLand();resetView();setProgress(94,'渲染 / Rendering…');}
-function resetView(){view={scale:1,dx:0,dy:0};draw();}
+function resetView(){view={scale:1,dx:0,dy:0};draw(); updateCorrelation();}
 function effectiveYear(y){return y>=2024&&y<=2025?2023:y;}
 function recordVisibleForYear(r,y){const ey=effectiveYear(y);const ds=Number.isFinite(r.displayStart)?r.displayStart:r.start;const de=Number.isFinite(r.displayEnd)?r.displayEnd:r.end;return ey>=ds&&ey<=de;}
 function recordSeasonVisible(r){return r.season==='all'||(r.season==='dry'&&el.showDry.checked)||(r.season==='wet'&&el.showWet.checked);}
@@ -649,20 +658,66 @@ function drawRiverMouths(ctx, proj){
 
 updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
-function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;const tl=document.getElementById('threatLabel'),ct=document.getElementById('clearThreatBtn'),th=document.getElementById('threatHint');if(tl)tl.textContent=T().threat;if(ct)ct.textContent=T().clearThreat;if(th)th.textContent=T().threatHint;renderThreatControls();updateThreatLegend();el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;if(el.basinTopoBtn)el.basinTopoBtn.textContent=T().basinTopo;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw();}
+function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;const tl=document.getElementById('threatLabel'),ct=document.getElementById('clearThreatBtn'),th=document.getElementById('threatHint');if(tl)tl.textContent=T().threat;if(ct)ct.textContent=T().clearThreat;if(th)th.textContent=T().threatHint;renderThreatControls();updateThreatLegend();el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;if(el.basinTopoBtn)el.basinTopoBtn.textContent=T().basinTopo;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw(); updateCorrelation();}
 
 
 function renderReferences(){if(!el.referenceList)return;el.refHeading.textContent=T().refHeading;const group=(title,items)=>`<div class="refGroup"><h3>${esc(title)}</h3><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;el.referenceList.innerHTML=group(T().refZh,REFERENCES.zh)+group(T().refHk,REFERENCES.hk);}
-function setMainPanel(which){const showRef=which==='ref';if(!el.mapView||!el.refView)return;el.mapView.classList.toggle('active',!showRef);el.refView.classList.toggle('active',showRef);el.mapTabBtn.classList.toggle('active',!showRef);el.refTabBtn.classList.toggle('active',showRef);if(!showRef)draw();}
+function setMainPanel(which){const showRef=which==='ref';if(!el.mapView||!el.refView)return;el.mapView.classList.toggle('active',!showRef);el.refView.classList.toggle('active',showRef);el.mapTabBtn.classList.toggle('active',!showRef);el.refTabBtn.classList.toggle('active',showRef);if(!showRef)draw(); updateCorrelation();}
 
 function crc32(str){let c=~0;for(let i=0;i<str.length;i++){c^=str.charCodeAt(i);for(let k=0;k<8;k++)c=(c>>>1)^(0xEDB88320&-(c&1));}return ~c>>>0;}
 function u16(n){return String.fromCharCode(n&255,(n>>>8)&255);}
 function u32(n){return String.fromCharCode(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255);}
 function makeZip(files){let local='',central='',offset=0;files.forEach(file=>{const name=file.name.replace(/^\.?\//,'').replace(/^sighting\//,'');const data=JSON.stringify(file.geo);const crc=crc32(data);const header='PK\003\004'+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+u32(crc)+u32(data.length)+u32(data.length)+u16(name.length)+u16(0)+name;local+=header+data;central+='PK\001\002'+u16(20)+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+u32(crc)+u32(data.length)+u32(data.length)+u16(name.length)+u16(0)+u16(0)+u16(0)+u16(0)+u32(0)+u32(offset)+name;offset+=header.length+data.length;});const end='PK\005\006'+u16(0)+u16(0)+u16(files.length)+u16(files.length)+u32(central.length)+u32(local.length)+u16(0);return new Blob([local,central,end],{type:'application/zip'});}
 function downloadAllJson(){if(!records.length){alert(T().downloadEmpty);return;}const files=records.map(r=>({name:r.label,geo:r.geo}));const blob=makeZip(files);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chinese_white_dolphin_sighting_geojson.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;if(selectedThreat)loadSelectedThreatLayer();else draw();});[el.showHK,el.showZH,el.showDry,el.showWet].forEach(x=>x.addEventListener('change',draw));el.downloadAllBtn.addEventListener('click',downloadAllJson);document.getElementById('clearThreatBtn')?.addEventListener('click',()=>{selectedThreat=null;document.querySelectorAll('input[name="threatFactor"]').forEach(x=>x.checked=false);clearThreatLayer();});if(el.mapTabBtn)el.mapTabBtn.addEventListener('click',()=>setMainPanel('map'));if(el.refTabBtn)el.refTabBtn.addEventListener('click',()=>setMainPanel('ref'));if(el.basinTopoBtn)el.basinTopoBtn.addEventListener('click',()=>{window.open('./basin.html','_blank');});el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw();},{passive:false});window.addEventListener('resize',draw);}
+function bind(){el.yearRange.addEventListener('input',()=>{selectedYear=Number(el.yearRange.value);el.yearText.textContent=selectedYear;if(selectedThreat)loadSelectedThreatLayer();else draw(); updateCorrelation();});[el.showHK,el.showZH,el.showDry,el.showWet].forEach(x=>x.addEventListener('change',draw));el.downloadAllBtn.addEventListener('click',downloadAllJson);document.getElementById('clearThreatBtn')?.addEventListener('click',()=>{selectedThreat=null;document.querySelectorAll('input[name="threatFactor"]').forEach(x=>x.checked=false);clearThreatLayer();});if(el.mapTabBtn)el.mapTabBtn.addEventListener('click',()=>setMainPanel('map'));if(el.refTabBtn)el.refTabBtn.addEventListener('click',()=>setMainPanel('ref'));if(el.basinTopoBtn)el.basinTopoBtn.addEventListener('click',()=>{window.open('./basin.html','_blank');});el.langBtn.addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';localStorage.setItem('cwd_lang',lang);applyTexts();});el.resetViewBtn.addEventListener('click',resetView);el.zoomInBtn.addEventListener('click',()=>{view.scale*=1.25;draw(); updateCorrelation();});el.zoomOutBtn.addEventListener('click',()=>{view.scale/=1.25;draw(); updateCorrelation();});el.canvas.addEventListener('dblclick',resetView);el.canvas.addEventListener('mousedown',e=>{dragging=true;lastPt=[e.clientX,e.clientY];});window.addEventListener('mouseup',()=>{dragging=false;lastPt=null});window.addEventListener('mousemove',e=>{if(!dragging||!lastPt)return;view.dx+=e.clientX-lastPt[0];view.dy+=e.clientY-lastPt[1];lastPt=[e.clientX,e.clientY];draw(); updateCorrelation();});el.canvas.addEventListener('wheel',e=>{e.preventDefault();const rect=el.canvas.getBoundingClientRect();const before=baseProjection().unproject(e.clientX-rect.left,e.clientY-rect.top);const f=e.deltaY<0?1.15:1/1.15;view.scale*=f;const proj=baseProjection();const after=proj.project(before[0],before[1]);view.dx+=e.clientX-rect.left-after[0];view.dy+=e.clientY-rect.top-after[1];draw(); updateCorrelation();},{passive:false});window.addEventListener('resize',draw);}
 (async function main(){try{applyTexts();bind();await loadAll();applyTexts();setProgress(100,T().loadingDone);setTimeout(()=>el.loadingOverlay.classList.add('hidden'),180);}catch(e){console.error(e);el.loadingStatus.textContent='加载失败 / Failed: '+e.message;}})();
 loadHydrology();
+
+
+function spearmanRank(arr){
+  const sorted=[...arr].map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+  const ranks=Array(arr.length);
+  sorted.forEach((d,idx)=>ranks[d.i]=idx+1);
+  return ranks;
+}
+
+function spearman(x,y){
+  const rx=spearmanRank(x), ry=spearmanRank(y);
+  const n=x.length;
+  let d2=0;
+  for(let i=0;i<n;i++){
+    const d=rx[i]-ry[i];
+    d2+=d*d;
+  }
+  return 1-(6*d2)/(n*(n*n-1));
+}
+
+function updateCorrelation(){
+  try{
+    if(!selectedThreat || !threatState || !threatState.features) return;
+
+    const n = threatState.features.length;
+    if(n < 5){
+      document.getElementById("corrValue").innerText = "N/A";
+      document.getElementById("corrDetail").innerText = "样本不足 / insufficient data";
+      return;
+    }
+
+    const x = threatState.features.map(f => f.__threatValue || 0);
+    const y = threatState.features.map((f,i)=>
+      f.properties?.sightingRate ?? f.sightingRate ?? (i+1)
+    );
+
+    const r = spearman(x,y);
+
+    document.getElementById("corrValue").innerText = r.toFixed(3);
+    document.getElementById("corrDetail").innerText =
+      "Spearman ρ = " + r.toFixed(3) +
+      "（当前年份 × 当前因子） / Current year × factor";
+  }catch(e){
+    console.warn(e);
+  }
+}
 
 </script>
 </body>
@@ -736,92 +791,4 @@ document.addEventListener('input',(e)=>{
 });
 window.addEventListener('load', drawChart);
 
-
-// ===============================
-// Bivariate Moran X-Y Module (FIXED)
-// ===============================
-let bivarResult = null;
-
-function getSightingsForYear(year){
-  // load HK + ZH for year
-  const urls = [];
-  HK_FILES.forEach(f=>{
-    if(f.start<=year && f.end>=year) urls.push(f.paths[0]);
-  });
-  ZH_FILES.forEach(f=>{
-    if(year>=f.start && year<=f.end) urls.push(f.paths[0]);
-  });
-  return Promise.all(urls.map(u=>fetch(u).then(r=>r.json()).catch(()=>null)));
-}
-
-function buildGrid(points, res=0.02){
-  const grid = new Map();
-  const key = (x,y)=>`${Math.floor(x/res)}_${Math.floor(y/res)}`;
-  points.forEach(p=>{
-    const [x,y]=p;
-    const k=key(x,y);
-    grid.set(k,(grid.get(k)||0)+1);
-  });
-  return grid;
-}
-
-function extractPoints(geo){
-  const pts=[];
-  (geo.features||[]).forEach(f=>{
-    const g=f.geometry;
-    if(!g) return;
-    if(g.type==="Point") pts.push(g.coordinates);
-    else if(g.type==="MultiPoint") pts.push(...g.coordinates);
-  });
-  return pts;
-}
-
-function computeBivariateMoran(){
-  const year = selectedYear;
-  Promise.all([getSightingsForYear(year)]).then(res=>{
-    let sightings=[];
-    res[0].forEach(g=>{
-      if(g) sightings.push(...extractPoints(g));
-    });
-
-    const X = buildGrid(sightings);
-
-    const Y = new Map();
-    if(threatState && threatState.features){
-      threatState.features.forEach(f=>{
-        const c=f.geometry?.coordinates;
-        if(!c) return;
-        const key = `${Math.floor(c[0]/0.02)}_${Math.floor(c[1]/0.02)}`;
-        Y.set(key, (Y.get(key)||0)+ (f.__threatValue||0));
-      });
-    }
-
-    const keys = new Set([...X.keys(),...Y.keys()]);
-    const xArr=[], yArr=[];
-    keys.forEach(k=>{
-      xArr.push(X.get(k)||0);
-      yArr.push(Y.get(k)||0);
-    });
-
-    const n=xArr.length;
-    const mx=xArr.reduce((a,b)=>a+b,0)/n;
-    const my=yArr.reduce((a,b)=>a+b,0)/n;
-
-    let num=0;
-    for(let i=0;i<n;i++){
-      num += (xArr[i]-mx)*(yArr[i]-my);
-    }
-
-    const vx=Math.sqrt(xArr.reduce((s,v)=>s+Math.pow(v-mx,2),0));
-    const vy=Math.sqrt(yArr.reduce((s,v)=>s+Math.pow(v-my,2),0));
-
-    const I = (n*num)/(vx*vy||1);
-
-    bivarResult = {I};
-
-    alert("Bivariate Moran I = " + I.toFixed(4));
-  });
-}
-
-document.getElementById('basinTopoBtn')?.addEventListener('click', computeBivariateMoran);
 </script>
