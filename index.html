@@ -1,8 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>中华白海豚数据库</title>
 <style>
 :root{
@@ -22,57 +23,47 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
 
 .threatGrid{max-height:260px;overflow:auto;padding-right:2px}.threatHint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.45}.clearThreatBtn{padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.threatLayerProgress{position:absolute;right:14px;bottom:86px;z-index:4;width:min(280px,calc(100% - 28px));border:1px solid rgba(14,165,233,.25);border-radius:14px;background:rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(15,23,42,.10);padding:10px 12px;backdrop-filter:blur(8px)}.threatLayerProgress.hidden{display:none}.threatLayerProgressTitle{font-size:12px;font-weight:900;color:#075985;margin-bottom:7px}.threatLayerBar{height:8px;border-radius:999px;background:#e4eef4;overflow:hidden;border:1px solid #d7e5ef}.threatLayerBarFill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#bae6fd,#0ea5e9);transition:width .18s ease}.threatLayerProgressMeta{display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:var(--muted);font-size:11px}.threatLegendBox{position:absolute;right:14px;bottom:14px;z-index:3;width:min(280px,calc(100% - 28px));border:1px solid rgba(15,23,42,.12);border-radius:14px;background:rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(15,23,42,.10);padding:10px 12px;backdrop-filter:blur(8px);pointer-events:none}.threatLegendBox.hidden{display:none}.threatLegendTitle{font-size:12px;font-weight:900;color:#10212f;margin-bottom:7px}.threatColorBar{height:12px;border-radius:999px;border:1px solid rgba(15,23,42,.14);background:linear-gradient(90deg,#eff6ff,#93c5fd,#22c55e,#facc15,#ef4444)}.threatLegendScale{display:flex;justify-content:space-between;gap:8px;margin-top:5px;color:var(--muted);font-size:11px}.threatLegendNote{margin-top:4px;color:var(--muted);font-size:10px;line-height:1.35}
 .loadingOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(900px 500px at 10% -10%,rgba(14,165,233,.18),transparent 55%),radial-gradient(1000px 600px at 100% 0%,rgba(2,132,199,.10),transparent 50%),rgba(244,251,255,.96);backdrop-filter:blur(10px);opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}.loadingOverlay.hidden{opacity:0;visibility:hidden;pointer-events:none}.loadingPanel{width:min(560px,92vw);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 48px rgba(15,23,42,.10);padding:26px 24px 22px}.loadingTitle{margin:0 0 8px;font-size:22px;font-weight:800}.loadingSub{margin:0 0 16px;color:var(--muted);font-size:14px}.loadingBar{height:12px;border-radius:999px;overflow:hidden;background:#e4eef4;border:1px solid #d7e5ef}.loadingBarFill{width:0%;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(125,211,252,.95),rgba(14,165,233,.98));transition:width .25s ease}.loadingMeta{display:flex;justify-content:space-between;margin-top:12px;color:var(--muted);font-size:13px}.loadingPercent{font-weight:900;color:var(--text)}.pageFooter{padding:12px 14px;margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
-.corrMeta{margin-top:6px;font-size:12px;color:#5b7285;line-height:1.4;}
 </style>
 </head>
 <body>
-<div class="loadingOverlay" id="loadingOverlay" aria-live="polite"><div class="loadingPanel"><h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2><p class="loadingSub" id="loadingSub">正在读取目击记录与 Natural Earth 高精度海岸线，请稍候… / Loading sighting records and Natural Earth coastline…</p><div class="loadingBar"><div class="loadingBarFill" id="loadingBarFill"></div></div><div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div></div></div>
+<div aria-live="polite" class="loadingOverlay" id="loadingOverlay"><div class="loadingPanel"><h2 class="loadingTitle" id="loadingTitle">正在加载 / Loading</h2><p class="loadingSub" id="loadingSub">正在读取目击记录与 Natural Earth 高精度海岸线，请稍候… / Loading sighting records and Natural Earth coastline…</p><div class="loadingBar"><div class="loadingBarFill" id="loadingBarFill"></div></div><div class="loadingMeta"><span id="loadingStatus">准备中 / Preparing…</span><span class="loadingPercent" id="loadingPercent">0%</span></div></div></div>
 <div class="wrap">
-  <div class="head"><div class="headTop"><div><h1 id="titleMain">中华白海豚数据库</h1><p class="sub" id="subMain">香港与珠海水域中华白海豚目击记录。</p><p class="note" id="loadNote">—</p></div><button id="langBtn" class="langBtn" type="button">English</button></div></div>
-  <div class="layout">
-    <aside class="sidebar"><div class="controls">
-
+<div class="head"><div class="headTop"><div><h1 id="titleMain">中华白海豚数据库</h1><p class="sub" id="subMain">香港与珠海水域中华白海豚目击记录。</p><p class="note" id="loadNote">—</p></div><button class="langBtn" id="langBtn" type="button">English</button></div></div>
+<div class="layout">
+<aside class="sidebar"><div class="controls">
 <div class="filterBox" id="popChartBox">
-  <div class="rangeLabel">
-    <span>种群变化 / Population Trend</span>
-    <div>
-      <label><input type="radio" name="decay" value="2.46" checked>2.46%（年衰退率 / decay）</label>
-      <label><input type="radio" name="decay" value="3.17">3.17%（年衰退率 / decay）</label>
-    </div>
-  </div>
-  <canvas id="popChart" width="280" height="160"></canvas>
+<div class="rangeLabel">
+<span>种群变化 / Population Trend</span>
+<div>
+<label><input checked="" name="decay" type="radio" value="2.46"/>2.46%（年衰退率 / decay）</label>
+<label><input name="decay" type="radio" value="3.17"/>3.17%（年衰退率 / decay）</label>
 </div>
-      <div class="rangeBox"><div class="rangeLabel"><span id="yearLabel">年份</span><span class="yearNow" id="yearText">2005</span></div><input id="yearRange" class="range" type="range" min="2005" max="2025" step="1" value="2005"><div class="yearTicks"><span>2005</span><span>2025</span></div></div>
-      <div class="filterBox"><div class="rangeLabel"><span id="areaLabel">显示水域</span></div><div class="radioGrid"><label class="radioItem"><input type="checkbox" id="showHK" checked> <span id="showHKText">香港水域</span></label><label class="radioItem"><input type="checkbox" id="showZH" checked> <span id="showZHText">珠海水域</span></label></div></div>
-      <div class="filterBox"><div class="rangeLabel"><span id="seasonLabel">季度</span></div><div class="radioGrid"><label class="radioItem"><input type="checkbox" id="showDry" checked> <span id="showDryText">干季</span></label><label class="radioItem"><input type="checkbox" id="showWet" checked> <span id="showWetText">湿季</span></label></div></div>
-      <div class="filterBox" id="threatBox"><div class="rangeLabel"><span id="threatLabel">海域威胁因子</span><button id="clearThreatBtn" class="clearThreatBtn" type="button">清除</button></div><div class="radioGrid threatGrid" id="threatGrid"></div><div class="threatHint" id="threatHint">默认不选；一次只显示一个因子。图层按当前年份从 threats 目录加载。</div></div>
-      <div class="filterBox"><div class="rangeLabel"><span id="viewLabel">视图</span></div><div class="btnRow"><button id="resetViewBtn" class="mini" type="button">回到最大地理范围</button><button id="zoomInBtn" class="mini" type="button">放大</button><button id="zoomOutBtn" class="mini" type="button">缩小</button></div></div>
-      <button id="downloadAllBtn" class="mini" type="button">一键下载全部 JSON</button>
-      <div class="statusBox"><div class="statusText" id="diagnosticText">—</div></div>
-    </div></aside>
-    <main class="main">
-      <div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
-      <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><button id="mapTabBtn" class="tabBtn active" type="button">地图</button><button id="refTabBtn" class="tabBtn" type="button">参考文献</button><button id="basinTopoBtn" class="tabBtn" type="button">流域拓扑</button><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div id="mapView" class="panelView active"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas><div id="threatLayerProgress" class="threatLayerProgress hidden"><div class="threatLayerProgressTitle" id="threatLayerProgressTitle">威胁图层加载中</div><div class="threatLayerBar"><div id="threatLayerBarFill" class="threatLayerBarFill"></div></div><div class="threatLayerProgressMeta"><span id="threatLayerProgressStatus">Preparing…</span><span id="threatLayerProgressPercent">0%</span></div></div><div id="threatLegendBox" class="threatLegendBox hidden"><div class="threatLegendTitle" id="threatLegendTitle">—</div><div class="threatColorBar"></div><div class="threatLegendScale"><span id="threatLegendMin">Low</span><span id="threatLegendMax">High</span></div><div class="threatLegendNote" id="threatLegendNote"></div></div></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #22c55e;border-radius:0"></span><span id="macauAdminLegend">澳门行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px solid #8b5cf6;border-radius:0"></span><span id="reserveLegend">实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer</span></span></div></div><div id="refView" class="panelView"><div class="referenceWrap"><h2 class="refHeading" id="refHeading">参考文献</h2><div id="referenceList"></div></div></div></div></section>
-      
-
+</div>
+<canvas height="160" id="popChart" width="280"></canvas>
+</div>
+<div class="rangeBox"><div class="rangeLabel"><span id="yearLabel">年份</span><span class="yearNow" id="yearText">2005</span></div><input class="range" id="yearRange" max="2025" min="2005" step="1" type="range" value="2005"/><div class="yearTicks"><span>2005</span><span>2025</span></div></div>
+<div class="filterBox"><div class="rangeLabel"><span id="areaLabel">显示水域</span></div><div class="radioGrid"><label class="radioItem"><input checked="" id="showHK" type="checkbox"/> <span id="showHKText">香港水域</span></label><label class="radioItem"><input checked="" id="showZH" type="checkbox"/> <span id="showZHText">珠海水域</span></label></div></div>
+<div class="filterBox"><div class="rangeLabel"><span id="seasonLabel">季度</span></div><div class="radioGrid"><label class="radioItem"><input checked="" id="showDry" type="checkbox"/> <span id="showDryText">干季</span></label><label class="radioItem"><input checked="" id="showWet" type="checkbox"/> <span id="showWetText">湿季</span></label></div></div>
+<div class="filterBox" id="threatBox"><div class="rangeLabel"><span id="threatLabel">海域威胁因子</span><button class="clearThreatBtn" id="clearThreatBtn" type="button">清除</button></div><div class="radioGrid threatGrid" id="threatGrid"></div><div class="threatHint" id="threatHint">默认不选；一次只显示一个因子。图层按当前年份从 threats 目录加载。</div></div>
+<div class="filterBox"><div class="rangeLabel"><span id="viewLabel">视图</span></div><div class="btnRow"><button class="mini" id="resetViewBtn" type="button">回到最大地理范围</button><button class="mini" id="zoomInBtn" type="button">放大</button><button class="mini" id="zoomOutBtn" type="button">缩小</button></div></div>
+<button class="mini" id="downloadAllBtn" type="button">一键下载全部 JSON</button>
+<div class="statusBox"><div class="statusText" id="diagnosticText">—</div></div>
+</div></aside>
+<main class="main">
+<div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
+<section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><button class="tabBtn active" id="mapTabBtn" type="button">地图</button><button class="tabBtn" id="refTabBtn" type="button">参考文献</button><button class="tabBtn" id="basinTopoBtn" type="button">流域拓扑</button><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div class="panelView active" id="mapView"><div class="mapCanvasWrap"><canvas class="mapCanvas" id="mapCanvas"></canvas><div class="threatLayerProgress hidden" id="threatLayerProgress"><div class="threatLayerProgressTitle" id="threatLayerProgressTitle">威胁图层加载中</div><div class="threatLayerBar"><div class="threatLayerBarFill" id="threatLayerBarFill"></div></div><div class="threatLayerProgressMeta"><span id="threatLayerProgressStatus">Preparing…</span><span id="threatLayerProgressPercent">0%</span></div></div><div class="threatLegendBox hidden" id="threatLegendBox"><div class="threatLegendTitle" id="threatLegendTitle">—</div><div class="threatColorBar"></div><div class="threatLegendScale"><span id="threatLegendMin">Low</span><span id="threatLegendMax">High</span></div><div class="threatLegendNote" id="threatLegendNote"></div></div></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #22c55e;border-radius:0"></span><span id="macauAdminLegend">澳门行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px solid #8b5cf6;border-radius:0"></span><span id="reserveLegend">实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer</span></span></div></div><div class="panelView" id="refView"><div class="referenceWrap"><h2 class="refHeading" id="refHeading">参考文献</h2><div id="referenceList"></div></div></div></div></section>
 <div class="summaryGrid" id="corrBox" style="margin-bottom:12px;">
-  <section class="summaryCard">
-    <h3>
-      <span id="corrTitleZh">白海豚目击 × 因子相关性</span>
-      /
-      <span id="corrTitleEn">Correlation</span>
-    </h3>
-
-    <div class="bigNum" id="corrValue">—</div>
-
-    <div class="corrMeta" id="corrMeta">
-      p < 0.05 * ｜ p < 0.01 ** ｜ p < 0.001 *** ｜ Spearman空间相关性 / Spatial correlation
-    </div>
-
-    <div class="list" id="corrDetail">等待数据加载 / Waiting for data</div>
-  </section>
+<section class="summaryCard">
+<h3>白海豚目击 × 因子相关性 / Correlation</h3>
+<div class="bigNum" id="corrValue">—</div><div class="corrMeta">p &lt; 0.05 * ｜ p &lt; 0.01 ** ｜ p &lt; 0.001 *** ｜ Spearman空间相关性 / Spatial correlation</div>
+<div class="list" id="corrDetail">等待数据加载 / Waiting for data</div>
+</section>
 </div>
-
+<div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
+</main>
+</div>
+<div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
+</div>
 <script>
 const I18N={zh:{title:'中华白海豚数据库',sub:'香港与珠海水域中华白海豚目击记录。',langBtn:'English',year:'年份',area:'显示水域',hk:'香港水域',zh:'珠海水域',season:'季度',dry:'干季',wet:'湿季',threat:'海域威胁因子',clearThreat:'清除',threatHint:'默认不选；一次只显示一个因子。图层按当前年份从 threats 目录加载。',threatLoading:'威胁图层加载中',threatNoNumeric:'未识别到数值字段，采用要素序号着色。',downloadAll:'一键下载全部 JSON',view:'视图',reset:'回到最大地理范围',zin:'放大',zout:'缩小',mapTitle:'目击记录地图',mapSub:'',mapTab:'地图',refTab:'参考文献',basinTopo:'流域拓扑',refHeading:'参考文献',refZh:'珠海水域',refHk:'香港水域',legend:'图例',hkLegend:'香港 GeoJSON',zhLegend:'珠海 GeoJSON',coast:'海岸线',hkAdmin:'香港行政边界',macauAdmin:'澳门行政边界',reserveBoundary:'实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer',max:'最大地理范围',loaded:(a,b,c)=>`已读取 ${a} 个文件，当前年份命中 ${b} 个文件，显示 ${c} 个要素。`,diag:(ok,miss,err,coast)=>`文件诊断：成功 <strong>${ok}</strong>，未找到 <strong>${miss}</strong>，错误 <strong>${err}</strong>。海岸线：<strong>${coast}</strong>。`,sum1:'当前年份',sum2:'当前显示要素',sum3:'最大地理范围',extent:'经度 / 纬度范围',noData:'当前年份没有加载到可显示的 GeoJSON。',matched:'当前年份命中文件',substitute:'珠海 2009–2014 使用 2005–2008 数据代替',futureSubstitute:'2024–2025 使用此前最近年份（2023）数据代替',downloadEmpty:'暂无可下载的 JSON 文件。',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m 在线海岸线',coastFallback:'内置备用海岸线'},en:{title:'Chinese White Dolphin Database',sub:'Chinese white dolphin sighting records in Hong Kong and Zhuhai waters.',langBtn:'中文',year:'Year',area:'Waters',hk:'Hong Kong waters',zh:'Zhuhai waters',season:'Season',dry:'Dry season',wet:'Wet season',threat:'Marine threat factors',clearThreat:'Clear',threatHint:'None selected by default; only one factor is shown at a time. Layers are loaded from the threats folder by selected year.',threatLoading:'Loading threat layer',threatNoNumeric:'No numeric field was detected; features are colored by index.',downloadAll:'Download all JSON',view:'View',reset:'Reset to maximum extent',zin:'Zoom in',zout:'Zoom out',mapTitle:'Sighting map',mapSub:'',mapTab:'Map',refTab:'References',basinTopo:'Basin topology',refHeading:'References',refZh:'Zhuhai waters',refHk:'Hong Kong waters',legend:'Legend',hkLegend:'Hong Kong GeoJSON',zhLegend:'Zhuhai GeoJSON',coast:'Coastline',hkAdmin:'Hong Kong administrative boundary',macauAdmin:'Macao administrative boundary',reserveBoundary:'Pearl River Estuary CWD National Nature Reserve boundary',max:'Maximum extent',loaded:(a,b,c)=>`Loaded ${a} files; ${b} files match the selected year; showing ${c} features.`,diag:(ok,miss,err,coast)=>`File diagnostics: loaded <strong>${ok}</strong>, missing <strong>${miss}</strong>, errors <strong>${err}</strong>. Coastline: <strong>${coast}</strong>.`,sum1:'Selected year',sum2:'Visible features',sum3:'Maximum extent',extent:'Longitude / latitude range',noData:'No displayable GeoJSON was loaded for this year.',matched:'Matched files',substitute:'Zhuhai 2009–2014 uses 2005–2008 data as substitute',futureSubstitute:'2024–2025 uses the nearest previous year (2023) as substitute',downloadEmpty:'No loaded JSON files are available for download.',loadingDone:'加载完成 / Completed',coastOnline:'Natural Earth 10m online coastline',coastFallback:'Built-in fallback coastline'}};
 let lang=localStorage.getItem('cwd_lang')||'zh';
@@ -729,7 +720,6 @@ function updateCorrelation(){
 </script>
 </body>
 </html>
-
 <script>
 const POP_YEARS = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
 const HK_BASE = [158, 145, 133, 122, 112, 103, 95, 87, 80, 73, 67, 62, 57, 52, 48, 44, 40, 37, 34, 31, 29, 26, 24];
