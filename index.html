@@ -52,8 +52,7 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
     <main class="main">
       <div class="toolbar"><div class="stats" id="stats">—</div><span class="pill" id="activePill">最大地理范围</span></div>
       <section class="section"><div class="sectionHead"><div><h2 class="sectionTitle" id="mapTitle">目击记录地图</h2><p class="sectionSub" id="mapSub"></p></div><div class="tabActions"><button id="mapTabBtn" class="tabBtn active" type="button">地图</button><button id="refTabBtn" class="tabBtn" type="button">参考文献</button><button id="basinTopoBtn" class="tabBtn" type="button">流域拓扑</button><span class="pill" id="coordPill">EPSG:4326</span></div></div><div class="mapPanel"><div id="mapView" class="panelView active"><div class="mapCanvasWrap"><canvas id="mapCanvas" class="mapCanvas"></canvas><div id="threatLayerProgress" class="threatLayerProgress hidden"><div class="threatLayerProgressTitle" id="threatLayerProgressTitle">威胁图层加载中</div><div class="threatLayerBar"><div id="threatLayerBarFill" class="threatLayerBarFill"></div></div><div class="threatLayerProgressMeta"><span id="threatLayerProgressStatus">Preparing…</span><span id="threatLayerProgressPercent">0%</span></div></div><div id="threatLegendBox" class="threatLegendBox hidden"><div class="threatLegendTitle" id="threatLegendTitle">—</div><div class="threatColorBar"></div><div class="threatLegendScale"><span id="threatLegendMin">Low</span><span id="threatLegendMax">High</span></div><div class="threatLegendNote" id="threatLegendNote"></div></div></div><div class="legend"><span id="legendLabel">图例</span><span class="legendItem"><span class="swatch" style="background:rgba(14,165,233,.32);border-color:#0ea5e9"></span><span id="hkLegend">香港 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:rgba(245,158,11,.34);border-color:#f59e0b"></span><span id="zhLegend">珠海 GeoJSON</span></span><span class="legendItem"><span class="swatch" style="background:#335b70;border-color:#335b70"></span><span id="coastLegend">海岸线</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #ef4444;border-radius:0"></span><span id="adminLegend">香港行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px dashed #22c55e;border-radius:0"></span><span id="macauAdminLegend">澳门行政边界</span></span><span class="legendItem"><span class="swatch" style="background:transparent;border:0;border-top:3px solid #8b5cf6;border-radius:0"></span><span id="reserveLegend">实验区 / CORE区 / BUFFER区 | Experiment / Core / Buffer</span></span></div></div><div id="refView" class="panelView"><div class="referenceWrap"><h2 class="refHeading" id="refHeading">参考文献</h2><div id="referenceList"></div></div></div></div></section>
-      <div class="summaryGrid">
-<button id="moranBtn" class="mini" style="margin-bottom:10px;">空间 Moran’s I</button><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
+      <div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
     </main>
   </div>
   <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
@@ -679,14 +678,18 @@ function computeSeries(base, rate){
   return base.map((v,i)=> v * Math.pow(1-rate,i));
 }
 
+
 function drawChart(){
   const canvas = document.getElementById('popChart');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
-  const yearIdx = document.getElementById('yearRange') ? parseInt(document.getElementById('yearRange').value)-2005 : 0;
-  const bandX = yearIdx/(25-2005);
+
+  const yearEl = document.getElementById('yearRange');
+  const selYear = yearEl ? parseInt(yearEl.value) : 2025;
+
+  const yearIdx = POP_YEARS.indexOf(selYear);
 
   const hk = computeSeries(HK_BASE, decayRate);
   const zh = computeSeries(ZH_BASE, decayRate);
@@ -708,10 +711,9 @@ function drawChart(){
   plot(zh,'#f59e0b');
   plot(hk,'#0ea5e9');
 
-  const selYear = parseInt(document.getElementById('yearMax')?.value || 2025);
-  const idx = POP_YEARS.indexOf(selYear);
-  if(idx>=0){
-    const x = idx/(POP_YEARS.length-1)*w;
+  // year indicator (fixed robust)
+  if(yearIdx >= 0){
+    const x = yearIdx/(POP_YEARS.length-1)*w;
     ctx.strokeStyle='red';
     ctx.beginPath();
     ctx.moveTo(x,0);
@@ -728,148 +730,10 @@ document.addEventListener('change', (e)=>{
 });
 
 document.addEventListener('input',(e)=>{
-  if(e.target.id==='yearMax'||e.target.id==='yearMin'){
+  if(e.target.id==='yearRange'){
     drawChart();
   }
 });
-
 window.addEventListener('load', drawChart);
-
-// =========================
-// ENHANCEMENTS A + B + C
-// =========================
-
-// --- safe year getter ---
-function getSelectedYear(){
-  const el = document.getElementById('yearRange');
-  return el ? parseInt(el.value) : 2005;
-}
-
-// override global selectedYear if exists
-let selectedYear = getSelectedYear();
-
-// sync year updates
-document.addEventListener('input', (e)=>{
-  if(e.target && e.target.id === 'yearRange'){
-    selectedYear = parseInt(e.target.value);
-  }
-});
-
-// =========================
-// A: fix pop chart & improve indicator
-// =========================
-function enhancePopChart(){
-  const canvas = document.getElementById('popChart');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0,0,w,h);
-
-  const decay = document.querySelector('input[name="decay"]:checked')?.value || 2.46;
-  const rate = parseFloat(decay)/100;
-
-  // simple curve
-  ctx.strokeStyle = "#0ea5e9";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-
-  let pop = 100;
-  for(let i=0;i<21;i++){
-    const x = 40 + i*(w-60)/20;
-    const y = h - 30 - pop*(h-60)/120;
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-    pop *= (1-rate);
-  }
-  ctx.stroke();
-
-  // current year marker
-  const year = getSelectedYear();
-  const idx = year - 2005;
-  const x = 40 + idx*(w-60)/20;
-
-  ctx.strokeStyle = "red";
-  ctx.beginPath();
-  ctx.moveTo(x,20);
-  ctx.lineTo(x,h-20);
-  ctx.stroke();
-}
-
-// =========================
-// B: Moran's I (simplified demo)
-// =========================
-function computeMoran(points){
-  if(!points || points.length<3) return 0;
-
-  let mean = points.length;
-  let num=0, den=0;
-
-  for(let i=0;i<points.length;i++){
-    den += Math.pow(1-mean,2);
-    for(let j=0;j<points.length;j++){
-      if(i===j) continue;
-      const dx = points[i][0]-points[j][0];
-      const dy = points[i][1]-points[j][1];
-      const w = 1/(Math.sqrt(dx*dx+dy*dy)+1e-6);
-      num += w;
-    }
-  }
-  return num/den;
-}
-
-function runMoran(){
-  const year = getSelectedYear();
-
-  // fallback synthetic points (since sightings may not exist globally)
-  const pts = [];
-  for(let i=0;i<30;i++){
-    pts.push([113.5 + Math.random(), 22.1 + Math.random()]);
-  }
-
-  const I = computeMoran(pts);
-
-  let card = document.getElementById('moranCard');
-  if(!card){
-    card = document.createElement('div');
-    card.id = "moranCard";
-    card.className = "summaryCard";
-    card.innerHTML = `<h3>Moran's I</h3><div class="bigNum" id="moranVal"></div>`;
-    document.querySelector('.summaryGrid')?.appendChild(card);
-  }
-
-  card.style.display = "block";
-  const val = document.getElementById('moranVal');
-  if(val) val.innerText = I.toFixed(3);
-}
-
-// bind button
-document.addEventListener('click',(e)=>{
-  if(e.target && e.target.id === 'moranBtn'){
-    runMoran();
-  }
-});
-
-// =========================
-// C: KDE + animation trigger
-// =========================
-function playAnimation(){
-  let y = 2005;
-  const timer = setInterval(()=>{
-    const el = document.getElementById('yearRange');
-    if(el){
-      el.value = y;
-      el.dispatchEvent(new Event('input'));
-    }
-    y++;
-    if(y>2025) clearInterval(timer);
-  },250);
-}
-
-// auto hook pop chart refresh
-setInterval(()=>{
-  try{ enhancePopChart(); }catch(e){}
-},1000);
-
 
 </script>
