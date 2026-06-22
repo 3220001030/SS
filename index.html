@@ -59,7 +59,23 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
 <div class="list" id="corrDetail">等待数据加载 / Waiting for data</div>
 </section>
 </div>
-<div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div>
+<div class="summaryGrid"><section class="summaryCard"><h3 id="sumTitle1">当前年份</h3><div class="bigNum" id="yearBig">2005</div><div class="list" id="yearFiles">—</div></section><section class="summaryCard"><h3 id="sumTitle2">当前显示要素</h3><div class="bigNum" id="featureBig">0</div><div class="list" id="featureList">—</div></section><section class="summaryCard"><h3 id="sumTitle3">最大地理范围</h3><div class="list" id="extentList">—</div></section></div><div class="summaryGrid" id="extraCards">
+<section class="summaryCard">
+<h3>栖息地变化 / Habitat Trend</h3>
+<div class="bigNum">-2.83%</div>
+<div class="list">整体年衰退率（2015–2021）</div>
+</section>
+<section class="summaryCard">
+<h3>环境因子结构 / Environmental Factors</h3>
+<div class="bigNum">Pa1</div>
+<div class="list">主要营养盐驱动因子</div>
+</section>
+<section class="summaryCard">
+<h3>区域差异 / Regional Variation</h3>
+<div class="bigNum">↑ / ↓</div>
+<div class="list">保护区外下降更显著</div>
+</section>
+</div>
 </main>
 </div>
 <div class="pageFooter" id="footerText">中华白海豚数据库｜Chinese White Dolphin Database</div>
@@ -788,4 +804,27 @@ document.addEventListener('input',(e)=>{
 });
 window.addEventListener('load', drawChart);
 
+
+
+function updateCorrelation(){
+  const corrValue = document.getElementById('corrValue');
+  const corrDetail = document.getElementById('corrDetail');
+  if(!corrValue || !corrDetail) return;
+
+  corrValue.innerHTML = '0.86*** (Pa1)';
+
+  corrDetail.innerHTML = `
+  <div>DO ↑ *</div>
+  <div>Chlorophyll-a ↑ *</div>
+  <div>As ↑ *</div>
+  <div>Pb ↑ *</div>
+  <div>Zn ↑ *</div>
+  <div>Fecal coliform ↓ *</div>
+  <div>Suspended solids ↓ *</div>
+  `;
+}
+
+window.addEventListener('load', ()=>{
+  updateCorrelation();
+});
 </script>
