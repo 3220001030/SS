@@ -55,7 +55,7 @@ button,input[type=range]{font:inherit}button{border:1px solid var(--line);border
       
 <div class="summaryGrid" id="corrBox" style="margin-bottom:12px;">
   <section class="summaryCard">
-    <h3>白海豚目击 × 因子相关性 / Correlation</h3>
+    <h3 id="corrTitle">白海豚目击与因子相关性</h3>
     <div class="bigNum" id="corrValue">—</div>
     <div class="list" id="corrDetail">等待数据加载 / Waiting for data</div>
   </section>
@@ -658,7 +658,7 @@ function drawRiverMouths(ctx, proj){
 
 updateInfo(info);}
 function updateInfo(info={feats:currentFeatures()}){const recs=currentRecords();const feats=info.feats||[];el.yearBig.textContent=selectedYear;el.featureBig.textContent=feats.length;el.stats.textContent=T().loaded(records.length,recs.length,feats.length);el.loadNote.textContent=T().loaded(records.length,recs.length,feats.length);el.diagnosticText.innerHTML=T().diag(diagnostics.ok,diagnostics.miss,diagnostics.err,coastStatus);const zhSub=effectiveYear(selectedYear)>=2009&&effectiveYear(selectedYear)<=2014&&recs.some(r=>r.region==='zh'&&r.start===2005&&r.end===2008);const futureSub=selectedYear>=2024&&selectedYear<=2025;el.yearFiles.innerHTML=recs.length?`<div class="fileOk">${esc(T().matched)}：${recs.length}</div>${zhSub?`<div class="fileSub">${esc(T().substitute)}</div>`:''}${futureSub?`<div class="fileSub">${esc(T().futureSubstitute)}</div>`:''}`:`<div class="fileMiss">${esc(T().noData)}</div>`;const hk=feats.filter(f=>f.region==='hk').length,zh=feats.filter(f=>f.region==='zh').length;el.featureList.innerHTML=`<div>香港 / HK：${hk}</div><div>珠海 / Zhuhai：${zh}</div>`;el.extentList.innerHTML=`<div>${esc(T().extent)}</div><div>${maxExtent.minLon.toFixed(4)}–${maxExtent.maxLon.toFixed(4)}E</div><div>${maxExtent.minLat.toFixed(4)}–${maxExtent.maxLat.toFixed(4)}N</div>`;el.activePill.textContent=T().max;}
-function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;const tl=document.getElementById('threatLabel'),ct=document.getElementById('clearThreatBtn'),th=document.getElementById('threatHint');if(tl)tl.textContent=T().threat;if(ct)ct.textContent=T().clearThreat;if(th)th.textContent=T().threatHint;renderThreatControls();updateThreatLegend();el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;if(el.basinTopoBtn)el.basinTopoBtn.textContent=T().basinTopo;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw(); updateCorrelation();}
+function applyTexts(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=T().title;el.titleMain.textContent=T().title;el.subMain.textContent=T().sub;el.langBtn.textContent=T().langBtn;el.yearLabel.textContent=T().year;el.areaLabel.textContent=T().area;el.showHKText.textContent=T().hk;el.showZHText.textContent=T().zh;el.seasonLabel.textContent=T().season;el.showDryText.textContent=T().dry;el.showWetText.textContent=T().wet;const tl=document.getElementById('threatLabel'),ct=document.getElementById('clearThreatBtn'),th=document.getElementById('threatHint');if(tl)tl.textContent=T().threat;if(ct)ct.textContent=T().clearThreat;if(th)th.textContent=T().threatHint;renderThreatControls();updateThreatLegend();el.downloadAllBtn.textContent=T().downloadAll;el.viewLabel.textContent=T().view;el.resetViewBtn.textContent=T().reset;el.zoomInBtn.textContent=T().zin;el.zoomOutBtn.textContent=T().zout;el.mapTitle.textContent=T().mapTitle;el.mapSub.textContent=T().mapSub;if(el.mapTabBtn)el.mapTabBtn.textContent=T().mapTab;if(el.refTabBtn)el.refTabBtn.textContent=T().refTab;if(el.basinTopoBtn)el.basinTopoBtn.textContent=T().basinTopo;renderReferences();el.legendLabel.textContent=T().legend;el.hkLegend.textContent=T().hkLegend;el.zhLegend.textContent=T().zhLegend;el.coastLegend.textContent=T().coast;if(el.adminLegend)el.adminLegend.textContent=T().hkAdmin;if(el.macauAdminLegend)el.macauAdminLegend.textContent=T().macauAdmin;if(el.reserveLegend)el.reserveLegend.textContent=T().reserveBoundary;el.sumTitle1.textContent=T().sum1;el.sumTitle2.textContent=T().sum2;el.sumTitle3.textContent=T().sum3;const corrTitle=document.getElementById('corrTitle');if(corrTitle)corrTitle.textContent=lang==='zh'?'白海豚目击与因子相关性':'Dolphin sighting–factor correlation';coastStatus=coastLines.length?T().coastOnline:T().coastFallback;draw(); updateCorrelation();}
 
 
 function renderReferences(){if(!el.referenceList)return;el.refHeading.textContent=T().refHeading;const group=(title,items)=>`<div class="refGroup"><h3>${esc(title)}</h3><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;el.referenceList.innerHTML=group(T().refZh,REFERENCES.zh)+group(T().refHk,REFERENCES.hk);}
@@ -692,6 +692,27 @@ function spearman(x,y){
   return 1-(6*d2)/(n*(n*n-1));
 }
 
+function corrNormalCdf(x){
+  const sign=x<0?-1:1;
+  x=Math.abs(x)/Math.sqrt(2);
+  const t=1/(1+0.3275911*x);
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429;
+  const erf=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return 0.5*(1+sign*erf);
+}
+function corrPValueApprox(r,n){
+  if(!Number.isFinite(r)||n<4||Math.abs(r)>=1) return 0;
+  const z=0.5*Math.log((1+r)/(1-r))*Math.sqrt(n-3);
+  return 2*(1-corrNormalCdf(Math.abs(z)));
+}
+function corrStars(p){
+  if(!Number.isFinite(p)) return '';
+  if(p<0.001) return '***';
+  if(p<0.01) return '**';
+  if(p<0.05) return '*';
+  return '';
+}
+
 function updateCorrelation(){
   try{
     if(!selectedThreat || !threatState || !threatState.features) return;
@@ -709,46 +730,17 @@ function updateCorrelation(){
     );
 
     const r = spearman(x,y);
+    const p = corrPValueApprox(r,n);
+    const stars = corrStars(p);
 
-    document.getElementById("corrValue").innerText = r.toFixed(3);
+    document.getElementById("corrValue").innerHTML =
+      r.toFixed(3) + (stars ? `<sup style="font-size:55%;margin-left:2px;color:#ef4444;">${stars}</sup>` : '');
     document.getElementById("corrDetail").innerText =
-      "Spearman ρ = " + r.toFixed(3) +
-      "（当前年份 × 当前因子） / Current year × factor";
+      "Spearman ρ, * 0.05 ** 0.01 *** 0.001";
   }catch(e){
     console.warn(e);
   }
 }
-
-</script>
-
-<script>
-// ===== Added: significance stars for correlation =====
-function __getSigStars(p){
-  if(p === undefined || p === null || isNaN(p)) return "";
-  if(p < 0.001) return "***";
-  if(p < 0.01) return "**";
-  if(p < 0.05) return "*";
-  return "";
-}
-
-(function(){
-  const corrEl = document.getElementById("corrValue");
-  const sigEl = document.createElement("span");
-  sigEl.id = "corrSig";
-  sigEl.style.marginLeft = "8px";
-  sigEl.style.fontWeight = "900";
-  sigEl.style.color = "#ef4444";
-  corrEl?.parentNode?.appendChild(sigEl);
-
-  const obs = new MutationObserver(() => {
-    const p = window.corrP;
-    sigEl.textContent = __getSigStars(p);
-  });
-
-  if(corrEl){
-    obs.observe(corrEl, {childList:true, subtree:true, characterData:true});
-  }
-})();
 </script>
 
 </body>
