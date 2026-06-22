@@ -720,6 +720,37 @@ function updateCorrelation(){
 }
 
 </script>
+
+<script>
+// ===== Added: significance stars for correlation =====
+function __getSigStars(p){
+  if(p === undefined || p === null || isNaN(p)) return "";
+  if(p < 0.001) return "***";
+  if(p < 0.01) return "**";
+  if(p < 0.05) return "*";
+  return "";
+}
+
+(function(){
+  const corrEl = document.getElementById("corrValue");
+  const sigEl = document.createElement("span");
+  sigEl.id = "corrSig";
+  sigEl.style.marginLeft = "8px";
+  sigEl.style.fontWeight = "900";
+  sigEl.style.color = "#ef4444";
+  corrEl?.parentNode?.appendChild(sigEl);
+
+  const obs = new MutationObserver(() => {
+    const p = window.corrP;
+    sigEl.textContent = __getSigStars(p);
+  });
+
+  if(corrEl){
+    obs.observe(corrEl, {childList:true, subtree:true, characterData:true});
+  }
+})();
+</script>
+
 </body>
 </html>
 
