@@ -430,9 +430,9 @@ function drawDashedBufferLines(ctx,proj,lines,stroke){
   if(!lines||!lines.length)return;
   ctx.save();
   ctx.strokeStyle=stroke;
-  ctx.lineWidth=Math.max(0.45,Math.min(0.9,0.55*view.scale));
-  ctx.setLineDash([3,4]);
-  ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.lineWidth=Math.max(1.05,Math.min(1.8,1.25*view.scale));
+  ctx.setLineDash([1.4,4.2]);
+  ctx.lineJoin='round'; ctx.lineCap='butt';
   lines.forEach(line=>{ctx.beginPath();pathLine(ctx,line,proj,false);ctx.stroke();});
   ctx.setLineDash([]);
   ctx.restore();
