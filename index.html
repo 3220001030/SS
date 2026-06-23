@@ -245,7 +245,7 @@ function drawHydrology(ctx, proj){
 
 // =========================
 // YEARLY COAST LAND LAYER (coast/coast_YYYY.geojson)
-// Positioned above Natural Earth + rivers, below sightings/threat/admin layers.
+// Layer order target: threats bottom, opaque Natural Earth above threats, yearly coast above Natural Earth, rivers above yearly coast.
 // =========================
 const YEARLY_COAST_DIR = './coast';
 const yearlyCoastCache = new Map();
@@ -762,9 +762,14 @@ function drawEightMouths(ctx,proj){
   ctx.restore();
 }
 
-function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();drawThreatLayer(ctx,proj);if(selectedThreat)drawOpaqueLandMask(ctx,proj);drawGrid(ctx,proj);drawNaturalEarthCoast(ctx,proj);
-drawHydrology(ctx,proj);
+function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();
+// Layer order: threats at the very bottom -> opaque Natural Earth land/coast -> yearly coast -> rivers -> sighting/admin/protection layers.
+drawThreatLayer(ctx,proj);
+drawOpaqueLandMask(ctx,proj);
+drawGrid(ctx,proj);
+drawNaturalEarthCoast(ctx,proj);
 drawYearlyCoastLayer(ctx,proj);
+drawHydrology(ctx,proj);
 const info=drawFeatures(ctx,proj);ctx.strokeStyle='rgba(7,89,133,.45)';ctx.lineWidth=1.4;const [x1,y1]=proj.project(maxExtent.minLon,maxExtent.maxLat),[x2,y2]=proj.project(maxExtent.maxLon,maxExtent.minLat);ctx.strokeRect(x1,y1,x2-x1,y2-y1);drawHKAdminBoundary(ctx,proj);drawMacauAdminBoundary(ctx,proj);drawPRDReserveBoundary(ctx,proj);
   drawCoastalParks(ctx,proj);
   drawRiverMouths(ctx,proj);
