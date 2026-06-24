@@ -323,17 +323,31 @@ function drawYearlyCoastLayer(ctx, proj){
 
 
 // =========================
-// NATURAL EARTH COAST BUFFER LINES (limited to PRD map extent only)
-// Extent requested by user: MIN_LON=112.129, MIN_LAT=21.383, MAX_LON=114.371, MAX_LAT=22.917.
-// The buffer is an on-screen cartographic approximation in WGS84 degrees; it avoids heavy GIS polygon buffering.
+// NATURAL EARTH COAST OFFSET LINES
+// Uses the Natural Earth coastline itself as the baseline and offsets it landward / seaward.
+// No hard rectangular clipping is applied to the drawn buffer lines, so the result looks continuous.
+// A generous interest extent is only used to avoid loading irrelevant global coastline features.
 // =========================
 const BUFFER_VIEW_EXTENT = {minLon:112.129, minLat:21.383, maxLon:114.371, maxLat:22.917};
+const BUFFER_LOAD_PAD_DEG = 0.75;
 let coastBufferLines = {land5:[], sea5:[], sea10:[]};
 let landPolyIndex = [];
 
 function inExtentPt(pt,b=BUFFER_VIEW_EXTENT,pad=0){
   const lon=Number(pt[0]), lat=Number(pt[1]);
   return lon>=b.minLon-pad && lon<=b.maxLon+pad && lat>=b.minLat-pad && lat<=b.maxLat+pad;
+}
+function lineIntersectsExtent(line,b=BUFFER_VIEW_EXTENT,pad=BUFFER_LOAD_PAD_DEG){
+  if(!Array.isArray(line)||line.length<2)return false;
+  let minLon=Infinity,maxLon=-Infinity,minLat=Infinity,maxLat=-Infinity;
+  for(const pt of line){
+    const lon=Number(pt[0]), lat=Number(pt[1]);
+    if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+    minLon=Math.min(minLon,lon); maxLon=Math.max(maxLon,lon);
+    minLat=Math.min(minLat,lat); maxLat=Math.max(maxLat,lat);
+  }
+  if(!Number.isFinite(minLon))return false;
+  return !(maxLon<b.minLon-pad || minLon>b.maxLon+pad || maxLat<b.minLat-pad || minLat>b.maxLat+pad);
 }
 function splitLineByExtent(line,b=BUFFER_VIEW_EXTENT,pad=0){
   const out=[]; let cur=[];
@@ -370,7 +384,7 @@ function rebuildLandPolyIndex(){
   (landPolys||[]).forEach(poly=>{
     if(!Array.isArray(poly)||!Array.isArray(poly[0]))return;
     const bbox=ringBBox(poly[0]);
-    if(bbox && !(bbox.maxLon<BUFFER_VIEW_EXTENT.minLon-0.2||bbox.minLon>BUFFER_VIEW_EXTENT.maxLon+0.2||bbox.maxLat<BUFFER_VIEW_EXTENT.minLat-0.2||bbox.minLat>BUFFER_VIEW_EXTENT.maxLat+0.2)) landPolyIndex.push({poly,bbox});
+    if(bbox) landPolyIndex.push({poly,bbox});
   });
 }
 function pointInIndexedLand(pt){
@@ -398,6 +412,7 @@ function offsetPointByNormal(pt,prev,next,km,side){
   return [lon+(nx*km)/lonScale, lat+(ny*km)/111.32];
 }
 function offsetCoastLine(line,km,wantLand){
+  // Keep the full selected Natural Earth coastline feature; do not clip offset lines at the map rectangle.
   const src=downsampleLine(line,3);
   const chunks=[]; let cur=[];
   for(let i=0;i<src.length;i++){
@@ -409,7 +424,7 @@ function offsetCoastLine(line,km,wantLand){
     let chosen;
     if(wantLand) chosen = plusLand ? plus : (minusLand ? minus : plus);
     else chosen = plusLand ? minus : (minusLand ? plus : minus);
-    if(inExtentPt(chosen,BUFFER_VIEW_EXTENT,0.005)) cur.push(chosen);
+    if(Number.isFinite(chosen?.[0]) && Number.isFinite(chosen?.[1])) cur.push(chosen);
     else { if(cur.length>1)chunks.push(cur); cur=[]; }
   }
   if(cur.length>1)chunks.push(cur);
@@ -426,7 +441,7 @@ function rebuildCoastBufferLines(){
   });
   coastBufferLines={land5,sea5,sea10};
 }
-function drawDashedBufferLines(ctx,proj,lines,stroke){
+function drawSolidBufferLines(ctx,proj,lines,stroke){
   if(!lines||!lines.length)return;
   ctx.save();
   ctx.strokeStyle=stroke;
@@ -437,9 +452,9 @@ function drawDashedBufferLines(ctx,proj,lines,stroke){
   ctx.restore();
 }
 function drawCoastBufferLines(ctx,proj){
-  if(document.getElementById('showLandBuffer5')?.checked) drawDashedBufferLines(ctx,proj,coastBufferLines.land5,'rgba(126,34,206,0.78)');
-  if(document.getElementById('showSeaBuffer5')?.checked) drawDashedBufferLines(ctx,proj,coastBufferLines.sea5,'rgba(2,132,199,0.78)');
-  if(document.getElementById('showSeaBuffer10')?.checked) drawDashedBufferLines(ctx,proj,coastBufferLines.sea10,'rgba(8,145,178,0.70)');
+  if(document.getElementById('showLandBuffer5')?.checked) drawSolidBufferLines(ctx,proj,coastBufferLines.land5,'rgba(126,34,206,0.78)');
+  if(document.getElementById('showSeaBuffer5')?.checked) drawSolidBufferLines(ctx,proj,coastBufferLines.sea5,'rgba(2,132,199,0.78)');
+  if(document.getElementById('showSeaBuffer10')?.checked) drawSolidBufferLines(ctx,proj,coastBufferLines.sea10,'rgba(8,145,178,0.70)');
 }
 function updateBufferToggleLabels(){
   const map={landBuffer5Text:['陆侧 5 km 缓冲区','Landward 5 km buffer'],seaBuffer5Text:['海侧 5 km 范围','Seaward 5 km range'],seaBuffer10Text:['海侧 10 km 范围','Seaward 10 km range']};
@@ -765,8 +780,8 @@ function bboxIntersectsLine(line,b,pad=0.08){return line.some(pt=>{const lon=Num
 function geometryToLines(geom){if(!geom)return[];if(geom.type==='LineString')return [geom.coordinates];if(geom.type==='MultiLineString')return geom.coordinates;if(geom.type==='Polygon')return geom.coordinates;if(geom.type==='MultiPolygon')return geom.coordinates.flat();if(geom.type==='GeometryCollection')return (geom.geometries||[]).flatMap(geometryToLines);return[];}
 function geometryToLandPolys(geom){if(!geom)return[];if(geom.type==='Polygon')return [geom.coordinates];if(geom.type==='MultiPolygon')return geom.coordinates;if(geom.type==='GeometryCollection')return (geom.geometries||[]).flatMap(geometryToLandPolys);return [];}
 function polygonIntersectsExtent(poly,b,pad=0.08){if(!Array.isArray(poly)||!Array.isArray(poly[0]))return false;return poly[0].some(pt=>{const lon=Number(pt[0]),lat=Number(pt[1]);return lon>=b.minLon-pad&&lon<=b.maxLon+pad&&lat>=b.minLat-pad&&lat<=b.maxLat+pad;});}
-async function loadNaturalEarthLand(){for(const url of NATURAL_EARTH_LAND_URLS){try{setProgress(88,{cn:'读取高精度陆地面…',en:'Loading high-resolution land polygons…'});const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const polys=[];(geo.features||[]).forEach(f=>geometryToLandPolys(f.geometry).forEach(poly=>{if(polygonIntersectsExtent(poly,BUFFER_VIEW_EXTENT,0.22))polys.push(poly)}));if(polys.length){landPolys=polys;rebuildLandPolyIndex();rebuildCoastBufferLines();return true;}}catch(e){}}landPolys=[];rebuildLandPolyIndex();rebuildCoastBufferLines();return false;}
-async function loadNaturalEarthCoast(){for(const url of NATURAL_EARTH_COAST_URLS){try{setProgress(86,{cn:'读取高精度海岸线…',en:'Loading high-resolution coastline…'});const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const lines=[];(geo.features||[]).forEach(f=>geometryToLines(f.geometry).forEach(line=>{if(!Array.isArray(line)||line.length<=1)return;splitLineByExtent(line,BUFFER_VIEW_EXTENT,0.16).forEach(seg=>{if(seg.length>1)lines.push(downsampleLine(seg,2));});}));if(lines.length){coastLines=lines;coastStatus=T().coastOnline;rebuildCoastBufferLines();return true;}}catch(e){}}coastLines=[];coastStatus=T().coastFallback;rebuildCoastBufferLines();return false;}
+async function loadNaturalEarthLand(){for(const url of NATURAL_EARTH_LAND_URLS){try{setProgress(88,{cn:'读取高精度陆地面…',en:'Loading high-resolution land polygons…'});const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const polys=[];(geo.features||[]).forEach(f=>geometryToLandPolys(f.geometry).forEach(poly=>{if(polygonIntersectsExtent(poly,BUFFER_VIEW_EXTENT,BUFFER_LOAD_PAD_DEG))polys.push(poly)}));if(polys.length){landPolys=polys;rebuildLandPolyIndex();rebuildCoastBufferLines();return true;}}catch(e){}}landPolys=[];rebuildLandPolyIndex();rebuildCoastBufferLines();return false;}
+async function loadNaturalEarthCoast(){for(const url of NATURAL_EARTH_COAST_URLS){try{setProgress(86,{cn:'读取高精度海岸线…',en:'Loading high-resolution coastline…'});const r=await fetch(url,{cache:'force-cache'});if(!r.ok)continue;const geo=await r.json();const lines=[];(geo.features||[]).forEach(f=>geometryToLines(f.geometry).forEach(line=>{if(!Array.isArray(line)||line.length<=1)return;if(lineIntersectsExtent(line,BUFFER_VIEW_EXTENT,BUFFER_LOAD_PAD_DEG))lines.push(downsampleLine(line,2));}));if(lines.length){coastLines=lines;coastStatus=T().coastOnline;rebuildCoastBufferLines();return true;}}catch(e){}}coastLines=[];coastStatus=T().coastFallback;rebuildCoastBufferLines();return false;}
 async function loadAll(){setProgress(5,{cn:'准备中…',en:'Preparing…'});let unionB=null;for(let i=0;i<FILES.length;i++){const spec=FILES[i];setProgress(5+76*(i/FILES.length),{cn:`读取 ${spec.label}`,en:`Loading ${spec.label}`});const got=await fetchFirst(spec.paths);diagnostics.miss+=got.missed;if(!got.json){diagnostics.miss++;continue}try{const geo=normalizeGeoJSON(got.json);if(!geo)throw new Error('Not FeatureCollection');const b=getBounds(geo.features);records.push({...spec,path:got.path,geo,b,features:geo.features});diagnostics.ok++;if(b)unionB=unionB?union(unionB,b):b;}catch(e){diagnostics.err++;}}
 maxExtent=padExtent(unionB?union(unionB,DEFAULT_EXTENT):DEFAULT_EXTENT,0.03);await loadNaturalEarthCoast();await loadNaturalEarthLand();await loadYearlyCoastLayer(selectedYear);resetView();setProgress(94,{cn:'渲染中…',en:'Rendering…'});}
 function resetView(){view={scale:1,dx:0,dy:0};draw(); updateCorrelation();}
@@ -888,7 +903,7 @@ function drawEightMouths(ctx,proj){
 }
 
 function draw(){if(!el.canvas||!el.mapView||!el.mapView.classList.contains('active')){updateInfo();return;}resizeCanvas();const ctx=el.canvas.getContext('2d');const rect=el.canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);const grad=ctx.createLinearGradient(0,0,0,rect.height);grad.addColorStop(0,'#eaf9ff');grad.addColorStop(1,'#d8f3ff');ctx.fillStyle=grad;ctx.fillRect(0,0,rect.width,rect.height);const proj=baseProjection();
-// Layer order: threats bottom -> opaque Natural Earth land/coast -> yearly coast -> clipped NE buffer lines -> rivers -> sighting/admin/protection layers.
+// Layer order: threats bottom -> opaque Natural Earth land/coast -> yearly coast -> Natural Earth offset buffer lines -> rivers -> sighting/admin/protection layers.
 drawThreatLayer(ctx,proj);
 drawOpaqueLandMask(ctx,proj);
 drawGrid(ctx,proj);
