@@ -1,0 +1,1218 @@
+// ==UserScript==
+// @name         WiseSearch TXT Category Export Precise
+// @namespace    local.wisesearch.txt.category.export.precise
+// @version      0.7.2
+// @description  慧科 WiseSearch：按旧逻辑自动切换栏目、全选、TXT 下载、取消全选、下一页；每页失败最多重试20次；每个栏目重新编号
+// @author       local
+// @match        https://vertical-new-search-wisersone-com.libezproxy.must.edu.mo/wevo/searchResult*
+// @match        https://vertical-new-search-wisersone-com.libezproxy.must.edu.mo/wevo/searchResult/*
+// @grant        none
+// @run-at       document-start
+// ==/UserScript==
+
+(() => {
+    'use strict';
+
+    const CONFIG = {
+        DOWNLOAD_PATH: '/wevo/download/downloadDocuments',
+
+        DEFAULT_DELAY_SEC: 3,
+        MIN_DELAY_SEC: 3,
+
+        CLICK_WAIT_MS: 900,
+        MODAL_WAIT_MS: 1200,
+        PAGE_WAIT_MS: 3000,
+        SUBMIT_WAIT_MS: 10000,
+
+        MAX_PAGE_RETRY: 20,
+        RETRY_WAIT_MS: 3000,
+
+        STYLE_ID: 'ws-txt-export-style',
+        BUTTON_ID: 'ws-txt-export-button',
+        PANEL_ID: 'ws-txt-export-panel',
+        TASK_KEY: 'ws_txt_category_export_task_v2',
+
+        CATEGORIES: [
+            { label: '报刊', folder: 'press' },
+            { label: '网站', folder: 'website' },
+            { label: '社交媒体', folder: 'social' },
+            { label: '论坛', folder: 'forum' },
+            { label: '博客', folder: 'blog' },
+            { label: '广播', folder: 'broadcast' }
+        ]
+    };
+
+    const runtime = {
+        running: false,
+        paused: false,
+        stopped: false,
+        interceptSubmit: false,
+        submitResolver: null,
+        controller: null
+    };
+
+    function log(...args) {
+        console.log('[WS-TXT-EXPORT]', ...args);
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function saveTask(task) {
+        localStorage.setItem(CONFIG.TASK_KEY, JSON.stringify(task));
+    }
+
+    function loadTask() {
+        try {
+            return JSON.parse(localStorage.getItem(CONFIG.TASK_KEY));
+        } catch {
+            return null;
+        }
+    }
+
+    function removeTask() {
+        localStorage.removeItem(CONFIG.TASK_KEY);
+    }
+
+    function isDownloadUrl(url) {
+        try {
+            const u = new URL(url, location.origin);
+            return u.pathname.includes(CONFIG.DOWNLOAD_PATH);
+        } catch {
+            return String(url || '').includes(CONFIG.DOWNLOAD_PATH);
+        }
+    }
+
+    function absUrl(url) {
+        return new URL(url, location.origin).href;
+    }
+
+    function sanitize(s, fallback = 'WiseSearch') {
+        const out = String(s || '')
+            .trim()
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+            .replace(/\s+/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        return out || fallback;
+    }
+
+    function setStatus(text) {
+        const el = document.getElementById('ws-txt-export-status');
+        if (el) el.textContent = text;
+        log(text);
+    }
+
+    function visible(el) {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return r.width > 0 &&
+            r.height > 0 &&
+            s.display !== 'none' &&
+            s.visibility !== 'hidden' &&
+            s.opacity !== '0';
+    }
+
+    function textOf(el) {
+        return String(el?.textContent || '').replace(/\s+/g, '').trim();
+    }
+
+    function clickElement(el, label) {
+        if (!el) {
+            throw new Error(`没有找到：${label}`);
+        }
+
+        el.scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+
+        const target = el;
+
+        target.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('mouseup', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+    }
+
+    function findVisibleBySelector(selector) {
+        return [...document.querySelectorAll(selector)].find(visible) || null;
+    }
+
+function guessYear() {
+    // 1. 优先从顶部日期筛选按钮读取：
+    // <a class="dropdown-toggle btn"><i class="fa fa-calendar"></i> 2011-01-01/2011-12-31 </a>
+    const calendarLinks = [
+        ...document.querySelectorAll('a.dropdown-toggle.btn'),
+        ...document.querySelectorAll('a.dropdown-toggle'),
+        ...document.querySelectorAll('button.dropdown-toggle')
+    ];
+
+    for (const el of calendarLinks) {
+        const text = String(el.innerText || el.textContent || '').trim();
+
+        // 精确匹配：2011-01-01/2011-12-31
+        const rangeMatch = text.match(/\b(20\d{2})-\d{2}-\d{2}\s*\/\s*(20\d{2})-\d{2}-\d{2}\b/);
+
+        if (rangeMatch) {
+            const startYear = rangeMatch[1];
+            const endYear = rangeMatch[2];
+
+            // 如果起止年份一致，直接返回这个年份
+            if (startYear === endYear) {
+                return startYear;
+            }
+
+            // 如果跨年，默认用起始年份
+            return startYear;
+        }
+    }
+
+    // 2. 兜底：从页面所有文本中找类似 2011-01-01/2011-12-31 的日期范围
+    const bodyText = String(document.body?.innerText || document.body?.textContent || '');
+
+    const bodyRangeMatch = bodyText.match(/\b(20\d{2})-\d{2}-\d{2}\s*\/\s*(20\d{2})-\d{2}-\d{2}\b/);
+
+    if (bodyRangeMatch) {
+        const startYear = bodyRangeMatch[1];
+        const endYear = bodyRangeMatch[2];
+
+        if (startYear === endYear) {
+            return startYear;
+        }
+
+        return startYear;
+    }
+
+    // 3. 再兜底：从 URL 里抓年份
+    const urlMatch = location.href.match(/\b(20\d{2})\b/);
+    if (urlMatch) {
+        return urlMatch[1];
+    }
+
+    // 4. 最后兜底：当前年份
+    return String(new Date().getFullYear());
+}
+
+    function getCurrentTabName() {
+        const activeTab = document.querySelector('.navbar-nav-pub li.active a p');
+        if (activeTab && textOf(activeTab)) return textOf(activeTab);
+
+        const labels = ['报刊', '论坛', '网站', '社交媒体', '博客', '广播', '微信', '微博'];
+        for (const label of labels) {
+            const hit = [...document.querySelectorAll('.navbar-nav-pub li a p')]
+                .find(el => textOf(el) === label && el.closest('li')?.className?.includes('active'));
+            if (hit) return label;
+        }
+
+        return '当前栏目';
+    }
+
+    function findCategoryElement(label) {
+        const candidates = [
+            ...document.querySelectorAll('.navbar-nav-pub li[role="presentation"] a p'),
+            ...document.querySelectorAll('.navbar-nav-pub li[role="presentation"] a span'),
+            ...document.querySelectorAll('.navbar-nav-pub li a p'),
+            ...document.querySelectorAll('.navbar-nav-pub li a span')
+        ];
+
+        return candidates.find(el => textOf(el) === label) || null;
+    }
+
+    function getCategoryCount(label) {
+        const el = findCategoryElement(label);
+        if (!el) return 0;
+
+        const li = el.closest('li');
+        if (!li) return 0;
+
+        if (label === '网站' || label === '社交媒体') {
+            const countSpan = li.querySelector(':scope > span.count') || li.querySelector('span.count');
+            if (countSpan) {
+                const m = String(countSpan.textContent || '').match(/\((\d+)\)|（(\d+)）|(\d+)/);
+                return m ? parseInt(m[1] || m[2] || m[3], 10) || 0 : 0;
+            }
+        }
+
+        const raw = li.innerText || '';
+        const m = raw.match(/\((\d+)\)|（(\d+)）/);
+
+        if (!m) return 0;
+
+        return parseInt(m[1] || m[2], 10) || 0;
+    }
+
+    async function clickCategory(label) {
+        setStatus(`正在点击栏目：${label}`);
+
+        const el = findCategoryElement(label);
+
+        if (!el) {
+            throw new Error(`没有找到栏目：${label}`);
+        }
+
+        const li = el.closest('li');
+
+        if (!li) {
+            throw new Error(`栏目 ${label} 没有找到外层 li。`);
+        }
+
+        if (li.className.includes('active')) {
+            setStatus(`当前已经在栏目：${label}`);
+            return;
+        }
+
+        if (label === '网站' || label === '社交媒体') {
+            const countSpan = li.querySelector(':scope > span.count') || li.querySelector('span.count');
+
+            if (!countSpan) {
+                console.log('[WS-TXT-EXPORT] dropdown li HTML:', li.outerHTML);
+                throw new Error(`栏目 ${label} 没有找到 span.count。`);
+            }
+
+            countSpan.click();
+
+            await sleep(CONFIG.PAGE_WAIT_MS);
+
+            setStatus(`已点击栏目 ${label} 的 span.count。`);
+            return;
+        }
+
+        const a = el.closest('a');
+
+        if (!a) {
+            throw new Error(`栏目 ${label} 没有找到可点击的 a 标签。`);
+        }
+
+        a.click();
+
+        await sleep(CONFIG.PAGE_WAIT_MS);
+
+        setStatus(`已点击栏目：${label}`);
+    }
+
+    function buildCategoryFileBase(task, category) {
+        const serial = pad2(task.categoryBatchIndex || task.startIndex || 1);
+
+        if (task.prefix) {
+            return `${category.folder}/${task.prefix}-${task.year}-${serial}`;
+        }
+
+        return `${category.folder}/${task.year}-${serial}`;
+    }
+
+    function getExtFromResponse(response) {
+        const cd = response.headers.get('content-disposition') || '';
+        const ct = response.headers.get('content-type') || '';
+
+        const m = cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+        if (m) {
+            const filename = decodeURIComponent(m[1].replace(/"/g, ''));
+            const ext = filename.match(/\.[a-z0-9]{2,8}$/i);
+            if (ext) return ext[0];
+        }
+
+        if (ct.includes('text')) return '.txt';
+        if (ct.includes('zip')) return '.zip';
+        if (ct.includes('pdf')) return '.pdf';
+        if (ct.includes('word')) return '.doc';
+        if (ct.includes('excel') || ct.includes('spreadsheet')) return '.xls';
+        if (ct.includes('rtf')) return '.rtf';
+
+        return '.txt';
+    }
+
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        a.href = url;
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    async function selectAllCurrentPage() {
+        setStatus('正在按 fa-square-o / fa-check-square 状态点击全选……');
+
+        const checkLi =
+            document.querySelector('li[data-action="check"].check') ||
+            document.querySelector('li[data-action="check"]');
+
+        if (!checkLi) {
+            throw new Error('没有找到顶部全选区域 li[data-action="check"]。');
+        }
+
+        if (checkLi.querySelector('i.fa.fa-check-square')) {
+            setStatus('当前页已经是全选状态。');
+            return;
+        }
+
+        let icon =
+            checkLi.querySelector('i.fa.fa-square-o') ||
+            checkLi.querySelector('label.checkbox-custom-label i.fa') ||
+            checkLi.querySelector('#navbar-nav-opt-article-checkbox-div i.fa');
+
+        if (!icon) {
+            console.log('[WS-TXT-EXPORT] checkLi HTML:', checkLi.outerHTML);
+            throw new Error('没有找到 fa-square-o 全选图标。');
+        }
+
+        const target =
+            icon.closest('label.checkbox-custom-label') ||
+            icon.closest('a.distribution-checkbox-toggle') ||
+            icon.closest('a') ||
+            icon;
+
+        target.scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+
+        target.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('mouseup', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        await sleep(1500);
+
+        if (checkLi.querySelector('i.fa.fa-check-square')) {
+            setStatus('已全选当前页：检测到 fa-check-square。');
+            return;
+        }
+
+        const outerA =
+            checkLi.querySelector('a.distribution-checkbox-toggle') ||
+            icon.closest('a');
+
+        if (outerA && outerA !== target) {
+            outerA.dispatchEvent(new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            }));
+
+            await sleep(1500);
+
+            if (checkLi.querySelector('i.fa.fa-check-square')) {
+                setStatus('已全选当前页：二次点击后检测到 fa-check-square。');
+                return;
+            }
+        }
+
+        console.log('[WS-TXT-EXPORT] checkLi HTML after click:', checkLi.outerHTML);
+        throw new Error('点击了 fa-square-o，但没有变成 fa-check-square。');
+    }
+
+    async function openDownloadOptions() {
+        setStatus('正在打开下载下拉菜单……');
+
+        let btn =
+            document.querySelector('.navbar-nav-tools-download .dropdown-download button.dropdown-toggle') ||
+            document.querySelector('li.dropdown-download button.dropdown-toggle') ||
+            document.querySelector('.navbar-nav-tools-download .dropdown-download button.btn-primary');
+
+        if (!btn) {
+            btn =
+                document.querySelector('li#download a[data-toggle][data-target]') ||
+                document.querySelector('li[data-action="download"] a[data-toggle][data-target]') ||
+                document.querySelector('li#download a') ||
+                document.querySelector('li[data-action="download"] a');
+        }
+
+        if (!btn) {
+            const icon = findVisibleBySelector('li#download i.fa.fa-download, li[data-action="download"] i.fa.fa-download');
+            btn = icon?.closest('a,li');
+        }
+
+        clickElement(btn, '下载下拉菜单按钮');
+
+        await sleep(CONFIG.MODAL_WAIT_MS);
+
+        const menu =
+            document.querySelector('.navbar-nav-tools-download .dropdown-download ul.dropdown-menu') ||
+            document.querySelector('li.dropdown-download ul.dropdown-menu');
+
+        if (!menu) {
+            throw new Error('点击下载后仍未找到下载下拉菜单。');
+        }
+
+        setStatus('已打开下载下拉菜单。');
+    }
+
+    async function chooseTXT() {
+        setStatus('正在选择 TXT 格式……');
+
+        const menu =
+            document.querySelector('.navbar-nav-tools-download .dropdown-download ul.dropdown-menu') ||
+            document.querySelector('li.dropdown-download ul.dropdown-menu');
+
+        if (!menu) {
+            throw new Error('没有找到下载下拉菜单。请确认已点击下载图标并展开下载选项。');
+        }
+
+        let txtInput = menu.querySelector('#dropdown-download-format-radio-txt');
+
+        if (txtInput) {
+            const target =
+                txtInput.closest('a') ||
+                txtInput.closest('label') ||
+                txtInput.closest('li') ||
+                txtInput;
+
+            target.click();
+            await sleep(CONFIG.CLICK_WAIT_MS);
+            setStatus('已选择 TXT 格式。');
+            return;
+        }
+
+        let txtSpan = [...menu.querySelectorAll('span')]
+            .filter(visible)
+            .find(el => textOf(el) === 'TXT');
+
+        if (!txtSpan) {
+            txtSpan = [...menu.querySelectorAll('li, a, label, div, span')]
+                .filter(visible)
+                .find(el => textOf(el).includes('TXT'));
+        }
+
+        if (!txtSpan) {
+            throw new Error('没有找到 TXT 格式选项。');
+        }
+
+        const target =
+            txtSpan.closest('a') ||
+            txtSpan.closest('label') ||
+            txtSpan.closest('li') ||
+            txtSpan;
+
+        target.click();
+
+        await sleep(CONFIG.CLICK_WAIT_MS);
+
+        setStatus('已选择 TXT 格式。');
+    }
+
+    async function clickFinalDownloadAndCapture() {
+        setStatus('正在点击下拉菜单底部“下载”按钮……');
+
+        runtime.interceptSubmit = true;
+
+        const p = waitForSubmit(CONFIG.SUBMIT_WAIT_MS);
+
+        const menu =
+            document.querySelector('.navbar-nav-tools-download .dropdown-download ul.dropdown-menu') ||
+            document.querySelector('li.dropdown-download ul.dropdown-menu');
+
+        if (!menu) {
+            runtime.interceptSubmit = false;
+            throw new Error('没有找到下载下拉菜单。');
+        }
+
+        let btn =
+            menu.querySelector('.addnew-btn button.pull-right.btn.btn-primary') ||
+            menu.querySelector('.addnew-btn button.btn-primary') ||
+            [...menu.querySelectorAll('button')]
+                .filter(visible)
+                .find(el => textOf(el) === '下载' || textOf(el).includes('下载'));
+
+        if (!btn) {
+            runtime.interceptSubmit = false;
+
+            const visibleButtons = [...menu.querySelectorAll('button, a, span')]
+                .filter(visible)
+                .map(el => ({
+                    tag: el.tagName,
+                    text: textOf(el),
+                    className: el.className
+                }));
+
+            console.table(visibleButtons);
+
+            throw new Error('没有找到：下载下拉菜单底部的最终下载按钮。已在控制台打印可见按钮列表。');
+        }
+
+        btn.click();
+
+        const captured = await p;
+
+        runtime.interceptSubmit = false;
+
+        return captured;
+    }
+
+    function waitForSubmit(timeoutMs) {
+        return new Promise((resolve, reject) => {
+            runtime.submitResolver = resolve;
+
+            setTimeout(() => {
+                if (runtime.submitResolver) {
+                    runtime.submitResolver = null;
+                    runtime.interceptSubmit = false;
+                    reject(new Error('等待 ToolActionForm 提交超时。可能是没有点到最终下载按钮。'));
+                }
+            }, timeoutMs);
+        });
+    }
+
+function captureForm(form, source) {
+    const action = form.getAttribute('action') || form.action || '';
+
+    if (!isDownloadUrl(action)) return false;
+
+    const captured = {
+        url: absUrl(action),
+        method: (form.getAttribute('method') || form.method || 'POST').toUpperCase(),
+        body: '',
+        source
+    };
+
+    // 正常脚本下载流程：有 resolver，说明正在等待捕获下载提交
+    if (runtime.submitResolver) {
+        const resolve = runtime.submitResolver;
+        runtime.submitResolver = null;
+        resolve(captured);
+
+        setStatus(`已拦截空 ToolActionForm：${source}`);
+        return true;
+    }
+
+    // 安全兜底：
+    // 如果没有 submitResolver，说明这次提交不是脚本当前流程需要的，
+    // 很可能会触发原网页未重命名下载，必须直接阻止。
+    setStatus(`已阻止一次原网页未重命名下载：${source}`);
+    console.warn('[WS-TXT-EXPORT] blocked native unrenamed download:', captured);
+
+    return true;
+}
+
+function hookSubmit() {
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        const action = form.getAttribute('action') || form.action || '';
+
+        // 只要是 WiseSearch 下载接口，就统一拦截
+        if (isDownloadUrl(action)) {
+            if (captureForm(form, 'submit event')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }
+    }, true);
+
+    const rawSubmit = HTMLFormElement.prototype.submit;
+
+    HTMLFormElement.prototype.submit = function() {
+        const action = this.getAttribute('action') || this.action || '';
+
+        // 只要是 WiseSearch 下载接口，就统一拦截
+        // 这样即使脚本等待超时后，网页迟到的 ToolActionForm.submit()
+        // 也不会触发原版未重命名 txt 下载。
+        if (isDownloadUrl(action)) {
+            captureForm(this, 'HTMLFormElement.submit');
+            return;
+        }
+
+        return rawSubmit.apply(this, arguments);
+    };
+}
+
+    async function fetchDownload(captured, fileBase) {
+        const controller = new AbortController();
+        runtime.controller = controller;
+
+        try {
+            const response = await fetch(captured.url, {
+                method: captured.method || 'POST',
+                credentials: 'include',
+                body: undefined,
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                const text = await response.text().catch(() => '');
+                throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+            }
+
+            const blob = await response.blob();
+            const ext = getExtFromResponse(response);
+
+            downloadBlob(blob, `${fileBase}${ext}`);
+        } finally {
+            runtime.controller = null;
+        }
+    }
+
+    async function clearSelection() {
+        setStatus('正在按 fa-check-square 取消全选……');
+
+        const checkLi =
+            document.querySelector('li[data-action="check"].check') ||
+            document.querySelector('li[data-action="check"]');
+
+        if (!checkLi) {
+            setStatus('没有找到顶部全选区域，跳过取消全选。');
+            return;
+        }
+
+        const checkedIcon = checkLi.querySelector('i.fa.fa-check-square');
+
+        if (!checkedIcon) {
+            setStatus('当前不是全选状态，无需取消。');
+            return;
+        }
+
+        const target =
+            checkedIcon.closest('label.checkbox-custom-label') ||
+            checkedIcon.closest('a.distribution-checkbox-toggle') ||
+            checkedIcon.closest('a') ||
+            checkedIcon;
+
+        target.scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+
+        target.dispatchEvent(new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('mouseup', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        target.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+
+        await sleep(1200);
+
+        if (checkLi.querySelector('i.fa.fa-square-o')) {
+            setStatus('已取消全选：检测到 fa-square-o。');
+        } else {
+            setStatus('已点击取消全选，但未检测到 fa-square-o，继续执行。');
+        }
+    }
+
+    function isDisabled(el) {
+        if (!el) return true;
+
+        const c1 = String(el.className || '').toLowerCase();
+        const c2 = String(el.parentElement?.className || '').toLowerCase();
+
+        return Boolean(
+            el.disabled ||
+            el.getAttribute('disabled') !== null ||
+            el.getAttribute('aria-disabled') === 'true' ||
+            c1.includes('disabled') ||
+            c2.includes('disabled')
+        );
+    }
+
+    async function goNextPage() {
+        setStatus('正在点击下一页……');
+
+        let icon = [...document.querySelectorAll('a i.fa.fa-angle-right')]
+            .filter(visible)
+            .find(i => {
+                const a = i.closest('a');
+                if (!a) return false;
+                const area = a.closest('.pagination, .paging, .pager, nav, ul') || a.parentElement;
+                return !isDisabled(a) && !isDisabled(area);
+            });
+
+        let btn = icon?.closest('a');
+
+        if (!btn) {
+            btn = [...document.querySelectorAll('a,button,li')]
+                .filter(visible)
+                .find(el => {
+                    const t = textOf(el);
+                    return (t === '下一页' || t === '下页' || t === 'Next' || t === '>') && !isDisabled(el);
+                });
+        }
+
+        if (!btn) return false;
+
+        btn.click();
+
+        await sleep(CONFIG.PAGE_WAIT_MS);
+
+        return true;
+    }
+
+    async function closeModalIfNeeded() {
+        const closeBtn =
+            [...document.querySelectorAll('button.close, button, a')]
+                .filter(visible)
+                .find(el => ['取消', '关闭', 'Close', 'Cancel', '×'].includes(textOf(el)));
+
+        if (closeBtn) {
+            closeBtn.click();
+            await sleep(CONFIG.CLICK_WAIT_MS);
+        }
+    }
+
+    async function cleanupAfterFailedAttempt() {
+        runtime.interceptSubmit = false;
+        runtime.submitResolver = null;
+
+        if (runtime.controller) {
+            try {
+                runtime.controller.abort();
+            } catch {}
+            runtime.controller = null;
+        }
+
+        try {
+            await closeModalIfNeeded();
+        } catch (e) {
+            console.warn('[WS-TXT-EXPORT] closeModalIfNeeded failed:', e);
+        }
+
+        try {
+            await clearSelection();
+        } catch (e) {
+            console.warn('[WS-TXT-EXPORT] clearSelection failed:', e);
+        }
+    }
+
+    async function exportCurrentPageWithRetry(task, category) {
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= CONFIG.MAX_PAGE_RETRY; attempt++) {
+            const fileBase = buildCategoryFileBase(task, category);
+
+            try {
+                setStatus(`正在导出：${fileBase}。第 ${attempt}/${CONFIG.MAX_PAGE_RETRY} 次尝试。`);
+
+                await selectAllCurrentPage();
+                await openDownloadOptions();
+                await chooseTXT();
+
+                const captured = await clickFinalDownloadAndCapture();
+
+                setStatus(`正在下载 ${fileBase}……`);
+                await fetchDownload(captured, fileBase);
+
+                await closeModalIfNeeded();
+                await clearSelection();
+
+                setStatus(`当前页导出成功：${fileBase}`);
+                return true;
+
+            } catch (err) {
+                lastError = err;
+                console.error(`[WS-TXT-EXPORT] 当前页第 ${attempt}/${CONFIG.MAX_PAGE_RETRY} 次失败：`, err);
+
+                await cleanupAfterFailedAttempt();
+
+                if (runtime.stopped) {
+                    throw err;
+                }
+
+                if (attempt < CONFIG.MAX_PAGE_RETRY) {
+                    setStatus(`当前页第 ${attempt}/${CONFIG.MAX_PAGE_RETRY} 次失败：${err.message}。等待 3 秒后重试当前页……`);
+                    await sleep(CONFIG.RETRY_WAIT_MS);
+                    continue;
+                }
+            }
+        }
+
+        throw new Error(`当前页已连续失败 ${CONFIG.MAX_PAGE_RETRY} 次，最后错误：${lastError?.message || '未知错误'}`);
+    }
+
+    function ensureStyle() {
+        if (document.getElementById(CONFIG.STYLE_ID)) return;
+
+        const style = document.createElement('style');
+        style.id = CONFIG.STYLE_ID;
+        style.textContent = `
+            #${CONFIG.BUTTON_ID} {
+                position: fixed;
+                right: 40px;
+                top: 120px;
+                z-index: 999999;
+                background: #5e33bf;
+                color: #fff;
+                border: none;
+                border-radius: 7px;
+                padding: 10px 14px;
+                font-size: 14px;
+                box-shadow: 0 4px 14px rgba(0,0,0,.24);
+                cursor: pointer;
+            }
+            #${CONFIG.PANEL_ID} {
+                position: fixed;
+                right: 40px;
+                top: 170px;
+                z-index: 999999;
+                width: 430px;
+                background: #fff;
+                color: #222;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                box-shadow: 0 8px 28px rgba(0,0,0,.22);
+                overflow: hidden;
+                font-size: 13px;
+                font-family: Arial, "Microsoft YaHei", sans-serif;
+            }
+            #${CONFIG.PANEL_ID} .head {
+                background: #5e33bf;
+                color: #fff;
+                padding: 10px 12px;
+                font-weight: bold;
+            }
+            #${CONFIG.PANEL_ID} .body {
+                padding: 12px;
+                line-height: 1.8;
+            }
+            #${CONFIG.PANEL_ID} input {
+                width: 120px;
+                margin-left: 8px;
+            }
+            #${CONFIG.PANEL_ID} button {
+                margin: 4px 4px 4px 0;
+                padding: 5px 10px;
+                cursor: pointer;
+            }
+            #${CONFIG.PANEL_ID} .muted {
+                color: #666;
+                font-size: 12px;
+            }
+            #ws-txt-export-status {
+                margin-top: 8px;
+                padding: 8px;
+                background: #f5f5f5;
+                border-radius: 6px;
+                word-break: break-all;
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    function createButton() {
+        if (document.getElementById(CONFIG.BUTTON_ID)) return;
+
+        ensureStyle();
+
+        const btn = document.createElement('button');
+        btn.id = CONFIG.BUTTON_ID;
+        btn.textContent = '慧科分类导出';
+        btn.addEventListener('click', togglePanel);
+
+        document.body.appendChild(btn);
+    }
+
+    function togglePanel() {
+        const old = document.getElementById(CONFIG.PANEL_ID);
+        if (old) old.remove();
+        else createPanel();
+    }
+
+    function createPanel() {
+        const old = document.getElementById(CONFIG.PANEL_ID);
+        if (old) old.remove();
+
+        const task = loadTask();
+        const year = guessYear();
+
+        const startIndexForPanel =
+            task?.startIndex ||
+            task?.categoryBatchIndex ||
+            task?.batchIndex ||
+            1;
+
+        const panel = document.createElement('div');
+        panel.id = CONFIG.PANEL_ID;
+
+        panel.innerHTML = `
+            <div class="head">慧科 TXT 分类导出</div>
+            <div class="body">
+                <div><b>当前页面：</b>${location.pathname}</div>
+                <div><b>当前栏目：</b>${getCurrentTabName()}</div>
+                <div><b>分类顺序：</b>报刊 → 网站 → 社交媒体 → 论坛 → 博客 → 广播</div>
+
+                <hr>
+
+                <div>
+                    <label>前缀：</label>
+                    <input id="ws-txt-prefix" type="text" value="${task?.prefix || ''}" placeholder="例如 hk">
+                </div>
+                <div>
+                    <label>年份：</label>
+                    <input id="ws-txt-year" type="number" value="${year}">
+                </div>
+                <div>
+                    <label>起始编号：</label>
+                    <input id="ws-txt-index" type="number" value="${startIndexForPanel}" min="1">
+                </div>
+                <div>
+                    <label>间隔秒数：</label>
+                    <input id="ws-txt-delay" type="number" value="${task?.delaySec || CONFIG.DEFAULT_DELAY_SEC}" min="${CONFIG.MIN_DELAY_SEC}">
+                </div>
+
+                <div class="muted">
+                    示例：press/hk-2011-01.txt；website/hk-2011-01.txt。每个栏目内部重新编号，当前页失败最多重试 20 次。
+                </div>
+
+                <hr>
+
+                <button id="ws-txt-start">开始分类导出</button>
+                <button id="ws-txt-pause">暂停</button>
+                <button id="ws-txt-resume">继续</button>
+                <button id="ws-txt-stop">停止</button>
+                <button id="ws-txt-clear">清除进度</button>
+
+                <div id="ws-txt-export-status">就绪。请停留在搜索结果页。</div>
+
+                <div class="muted">
+                    仍使用旧逻辑：点击栏目 → 全选 → 下载图标 → TXT → 下载 → 清除 → 下一页。
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+
+        document.getElementById('ws-txt-start').addEventListener('click', startTask);
+
+        document.getElementById('ws-txt-pause').addEventListener('click', () => {
+            runtime.paused = true;
+            setStatus('已请求暂停：当前页完成后暂停。');
+        });
+
+        document.getElementById('ws-txt-resume').addEventListener('click', resumeTask);
+
+        document.getElementById('ws-txt-stop').addEventListener('click', () => {
+            runtime.stopped = true;
+            runtime.paused = false;
+            if (runtime.controller) runtime.controller.abort();
+            removeTask();
+            setStatus('已停止，并清除任务记录。');
+        });
+
+        document.getElementById('ws-txt-clear').addEventListener('click', () => {
+            removeTask();
+            setStatus('已清除保存进度。');
+        });
+    }
+
+    async function startTask() {
+        const prefix = sanitize(String(document.getElementById('ws-txt-prefix').value || '').trim(), '');
+        const year = String(document.getElementById('ws-txt-year').value || '').trim();
+        const startIndex = parseInt(document.getElementById('ws-txt-index').value || '1', 10);
+        const delaySec = parseInt(document.getElementById('ws-txt-delay').value || CONFIG.DEFAULT_DELAY_SEC, 10);
+
+        if (!/^20\d{2}$/.test(year)) {
+            alert('年份格式不正确，例如 2005。');
+            return;
+        }
+
+        if (!Number.isInteger(startIndex) || startIndex < 1) {
+            alert('起始编号必须大于等于 1。');
+            return;
+        }
+
+        if (!Number.isInteger(delaySec) || delaySec < CONFIG.MIN_DELAY_SEC) {
+            alert(`间隔秒数不能低于 ${CONFIG.MIN_DELAY_SEC} 秒。`);
+            return;
+        }
+
+        const task = {
+            prefix,
+            year,
+            startIndex,
+            categoryBatchIndex: startIndex,
+            delaySec,
+            categoryIndex: 0,
+            startedAt: new Date().toISOString()
+        };
+
+        saveTask(task);
+        await runTask(task);
+    }
+
+    async function resumeTask() {
+        const task = loadTask();
+
+        if (!task) {
+            alert('没有可恢复任务。');
+            return;
+        }
+
+        if (!task.startIndex) {
+            task.startIndex = task.categoryBatchIndex || task.batchIndex || 1;
+        }
+
+        if (!task.categoryBatchIndex) {
+            task.categoryBatchIndex = task.startIndex;
+        }
+
+        runtime.paused = false;
+        runtime.stopped = false;
+
+        await runTask(task);
+    }
+
+    async function runTask(task) {
+        runtime.running = true;
+        runtime.paused = false;
+        runtime.stopped = false;
+
+        if (!task.startIndex) {
+            task.startIndex = task.categoryBatchIndex || task.batchIndex || 1;
+        }
+
+        if (!task.categoryBatchIndex) {
+            task.categoryBatchIndex = task.startIndex;
+        }
+
+        for (let ci = task.categoryIndex || 0; ci < CONFIG.CATEGORIES.length; ci++) {
+            const category = CONFIG.CATEGORIES[ci];
+
+            if (runtime.stopped) {
+                removeTask();
+                setStatus('任务已停止。');
+                return;
+            }
+
+            const count = getCategoryCount(category.label);
+
+            if (count <= 0) {
+                setStatus(`栏目 ${category.label} 数量为 0，跳过。`);
+                task.categoryIndex = ci + 1;
+                task.categoryBatchIndex = task.startIndex;
+                saveTask(task);
+                continue;
+            }
+
+            await clickCategory(category.label);
+
+            setStatus(`开始导出栏目：${category.label}，保存到 ${category.folder}/，编号从 ${pad2(task.categoryBatchIndex)} 开始。`);
+
+            while (true) {
+                if (runtime.stopped) {
+                    removeTask();
+                    setStatus('任务已停止。');
+                    return;
+                }
+
+                if (runtime.paused) {
+                    task.categoryIndex = ci;
+                    saveTask(task);
+                    setStatus(`已暂停。下次从栏目 ${category.label} 的 ${pad2(task.categoryBatchIndex)} 继续。`);
+                    return;
+                }
+
+                try {
+                    await exportCurrentPageWithRetry(task, category);
+
+                    task.categoryBatchIndex += 1;
+                    saveTask(task);
+
+                    const ok = await goNextPage();
+
+                    if (!ok) {
+                        setStatus(`栏目 ${category.label} 已到底。`);
+                        break;
+                    }
+
+                    const delay = Math.max(CONFIG.MIN_DELAY_SEC, task.delaySec || CONFIG.DEFAULT_DELAY_SEC);
+
+                    setStatus(`已进入下一页，等待 ${delay} 秒后继续。`);
+                    await sleep(delay * 1000);
+
+                } catch (err) {
+                    console.error(err);
+
+                    task.categoryIndex = ci;
+                    saveTask(task);
+
+                    setStatus(`出错，已保存进度：${err.message}`);
+                    alert(`出错，已保存进度：${err.message}`);
+                    return;
+                }
+            }
+
+            task.categoryIndex = ci + 1;
+            task.categoryBatchIndex = task.startIndex;
+            saveTask(task);
+        }
+
+        runtime.running = false;
+        removeTask();
+        setStatus('全部栏目导出完成。');
+        alert('全部栏目导出完成。');
+    }
+
+    hookSubmit();
+
+    function init() {
+        if (document.body) {
+            createButton();
+        } else {
+            setTimeout(init, 300);
+        }
+    }
+
+    init();
+
+})();
