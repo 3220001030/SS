@@ -1,0 +1,47 @@
+﻿文章总数: 1 篇
+==============================
+
+1. WorkSmart Asia -  (AI Solution Shows Early Success in Protecting Chinese White Dolphins) 2025-11-11 PR Newswire   
+
+-----------------------------------------------------------------------------
+
+文字快照 :https://tools.prnewswire.com/en-us/live/12084/release/20251111AE21053?filter=12084
+
+AI Solution Shows Early Success in Protecting Chinese White Dolphins
+
+XIAMEN, China, Nov. 11, 2025 /PRNewswire/ -- Huawei and partners today announced the preliminary results of a groundbreaking AI-powered solution designed to study and safeguard Chinese white dolphins in China's Xiamen Bay.
+
+Launched under the Huawei TECH4ALL initiative three months ago, the project has so far:
+
+Identified 13 individual dolphins based on 2,820 images and videos.Achieved an individual identification accuracy rate of more than 90% and a recognition rate for complex behaviors of 85%.Improved data labeling efficiency by 400%.Increased the response time of law enforcement to ships that speed or trespass into conservation areas by 65%.
+
+"The data-driven insights yielded by AI are helping conservationists formulate targeted protection measures to understand and respond to the threats facing this iconic dolphin species, and ensure that they survive and thrive in the wild," said Cui Yangyang, Director of the TECH4ALL Program Office for Huawei.
+
+Chinese white dolphins are a nationally protected species that are classified as vulnerable on the IUCN Red List. Major threats in Xiamen Bay, which is home to 51% of China's dolphin population, include shipping, fishing, and coastal engineering projects.
+
+Noise pollution, entanglement in fishing gear, and habitat loss are endangering their long-term survival.
+
+In partnership with the Third Institute of Oceanography under China's Ministry of Natural Resources and China Mobile, the project includes a feature recognition system that can identify individual animals based on the unique markings of their dorsal fins.
+
+"With the introduction of AI, surveys are now more efficient and conservation efforts more precise," said Wang Xianyan, Leader of the Marine Endangered Species Research and Conservation Team for the Third Institute of Oceanography under China's Ministry of Natural Resources. "The data on individual survival, reproductive dynamics, and social interactions provided by the AI recognition system form an essential basis for developing conservation measures."
+
+The solution provides image preprocessing, AI-powered inference and recognition, dorsal fin image cropping, data classification, and cloud display. Each dolphin has its own file, allowing researchers to track the status of individuals. With long-term data critical to formulating protection measures, researchers can see the number, distribution, age structure, and breeding behavior of the dolphins, as well as the threats they face.
+
+Previous manual monitoring was time-consuming and unable to produce reliable insights necessary for monitoring population dynamics and developing precise conservation measures.
+
+According to the Third Institute of Oceanography, the next 10 to 15 years will be critical for the growth of the population. The Chinese White Dolphin is vital to nearshore marine ecosystems and the ocean's role as a carbon sink. They feed on fish, which consume plankton. Plankton in turn absorb CO2 and fix carbon through photosynthesis. By indirectly participating in the carbon cycle through the food chain, protecting the dolphin population and the integrity of the ocean ecosystem is critical to helping address climate change.
+
+Alongside AI-powered analytics, a 5G-A network comprising 10 base stations covers 330 square kilometers of the bay area, achieving seamless coverage of key conservation zones.
+
+Using the integrated sensing and communication capabilities of 5G-A and combining data from radar, visual terminals, satellites, and Automatic Identification System (AIS) ship positioning, vessel movements can be tracked in real time within a 20-kilometer radius. The system delivers AI-powered alerts in seconds for violations such as boundary trespass or speeding, and law enforcement personnel can use shore-based monitoring to verify violations and quickly locate offending vessels.
+
+So far, 12 vessels have been investigated for potentially endangering the dolphins.
+
+With the continued efforts of research coupled with the application of AI, the secret lives of the Xiamen Bay population of Chinese white dolphins are gradually being revealed, giving hope for their continued survival.
+
+SOURCE Huawei
+
+Back   |  Next story: Guo Guangchang: Fosun Strengthens Globalization Capabilities, Accelerates Innovation through Open Cooperation
+
+文章编号: d0be424570d842aaed36de55fc1e142f
+-----------------------------------------------------------------------------
